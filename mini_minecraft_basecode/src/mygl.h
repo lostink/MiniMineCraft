@@ -10,7 +10,13 @@
 
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLShaderProgram>
-
+//Code from lostink for testing character
+#include <character.h>
+#include <tuple>
+#include <map>
+using std::tuple;
+using std::map;
+//tester code end
 
 class MyGL
     : public GLWidget277
@@ -28,8 +34,10 @@ private:
 
     /// Timer linked to timerUpdate(). Fires approx. 60 times per second
     QTimer timer;
-
-
+//Code from lostink for testing character
+    character Tester;
+    map<tuple<int,int,int>,int> test;
+//tester code end
 public:
     explicit MyGL(QWidget *parent = 0);
     ~MyGL();
