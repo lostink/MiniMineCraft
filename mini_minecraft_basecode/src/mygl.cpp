@@ -8,9 +8,9 @@
 
 MyGL::MyGL(QWidget *parent)
     : GLWidget277(parent),
-      geom_cube(this),
+      geom_cube(this),chunk(this),chunkManager(),
       prog_lambert(this), prog_flat(this),
-      gl_camera()
+      gl_camera(),timeCount(0)
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
     connect(&timer, SIGNAL(timeout()), this, SLOT(timerUpdate()));
@@ -53,6 +53,35 @@ void MyGL::initializeGL()
     //Create the instance of Cube
     geom_cube.create();
 
+    //=====================Added By Yuxin For Testing============================//
+    /*std::vector<std::tuple<int,int,int>> blockInfo;
+    for(int i=0; i<16; i++){
+        for(int j=0; j<16; j++){
+            for(int k=0; k<16; k++){
+                std::tuple<int,int, int> testBlock (i,j,k);
+                blockInfo.push_back(testBlock);
+            }
+        }
+    }
+    std::tuple<int, int, int> startPos(0,0,0);
+    //chunk.createChunk(blockInfo);
+    //chunk.create();
+    createNewChunk(blockInfo,startPos);*/
+
+    std::map<std::tuple<int, int, int>,int> blockInfo;
+    for(int i=0; i<16; i++){
+        for(int j=0; j<8; j++){
+            for(int k=0; k<16; k++){
+                std::tuple<int,int, int> testBlock (i,j,k);
+                blockInfo.insert(std::pair<std::tuple<int, int, int>, int>(testBlock,0));
+            }
+        }
+    }
+    std::tuple<int, int, int> startPos(0,0,0);
+    createNewChunk(blockInfo,startPos);
+
+    //=====================Added By Yuxin For Testing============================//
+
     // Create and set up the diffuse shader
     prog_lambert.create(":/glsl/lambert.vert.glsl", ":/glsl/lambert.frag.glsl");
     // Create and set up the flat lighting shader
@@ -70,6 +99,47 @@ void MyGL::initializeGL()
 
     scene.CreateTestScene();
 }
+
+//===========================Added By Yuxin===============================//
+void MyGL::createNewChunk(std::map<std::tuple<int, int, int>,int>& blockInfo,std::tuple<int, int, int> startPos){
+    Chunk* chunk = new Chunk(this);
+    chunk->createChunk(blockInfo,startPos);
+    chunk->setStartPos(glm::vec4(std::get<0>(startPos), std::get<1>(startPos), std::get<2>(startPos),1));
+    //chunk.create();
+    chunkManager.createNewChunk(chunk);
+}
+//===========================Added By Yuxin===============================//
+
+//===========================Added By Yuxin===============================//
+void MyGL::updateChunkVBO(){
+    //****************Create VBOs for the new Chunks****************//
+    Chunk* newChunk = nullptr;
+    for(unsigned int i=0; i<chunkManager.getNewChunks().size(); i++){
+        newChunk = chunkManager.getNewChunks()[i];
+        //Create VBO data for the newly generated chunks
+        newChunk->create();
+    }
+    chunkManager.clearNewChunks();
+    //****************Create VBOs for the chunks that have been changed (deleted/added)*****************//
+    Chunk* updateChunk = nullptr;
+    for(unsigned int i=0; i<chunkManager.getUpdatedChunks().size();i++){
+        std::cout<<"chunk is updated"<<std::endl;
+        updateChunk = chunkManager.getUpdatedChunks()[i];
+        //Create VBO data for the updated chunks
+        updateChunk->create();
+    }
+    chunkManager.clearUpdatedChunks();
+}
+
+//===========================Added By Yuxin===============================//
+
+//===========================Added By Yuxin===============================//
+void MyGL::updateChunkVisibility(){
+    //get the player position
+    //pass the player position to the chunkManager
+}
+
+//===========================Added By Yuxin===============================//
 
 void MyGL::resizeGL(int w, int h)
 {
@@ -99,8 +169,34 @@ void MyGL::paintGL()
     prog_flat.setViewProjMatrix(gl_camera.getViewProj());
     prog_lambert.setViewProjMatrix(gl_camera.getViewProj());
 
-    GLDrawScene();
+    //GLDrawScene();
+    GLRenderWorld();
 }
+
+//=====================Added by Yuxin==============================//
+void MyGL:: GLRenderWorld()
+{
+    //Set the model matrix
+    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(10, 20, 80));
+    prog_lambert.setModelMatrix(model);
+    //prog_lambert.draw(chunk);
+
+    //**************Update Chunk VBO*****************//
+    updateChunkVBO();
+
+    //**************Update chunk visibility***********//
+    //if the player position is at the edge of the new chunk, check all chunks visibility
+    updateChunkVisibility();
+
+    //***********Draw world chunks**************//
+    for(unsigned int i=0; i<chunkManager.getChunks().size(); i++){
+        if(chunkManager.getChunks()[i]->isChunkVisible()){
+            prog_lambert.draw(*(chunkManager.getChunks()[i]));
+        }
+    }
+}
+//=====================Added by Yuxin==============================//
+
 
 void MyGL::GLDrawScene()
 {
@@ -109,7 +205,7 @@ void MyGL::GLDrawScene()
         QList<QList<bool>> Xs = scene.objects[x];
         for(int y = 0; y < Xs.size(); y++)
         {
-            QList<bool> Ys = Xs[x];
+            QList<bool> Ys = Xs[y];
             for(int z = 0; z < Ys.size(); z++)
             {
                 if(Ys[z])
@@ -168,6 +264,24 @@ void MyGL::keyPressEvent(QKeyEvent *e)
     update();  // Calls paintGL, among other things
 }
 
+void MyGL::deleteBlock(int x, int y, int z){
+    chunkManager.deleteBlockAt(x, y, z);
+}
+
+void MyGL::addBlock(int x, int y, int z){
+    chunkManager.addBlockAt(x, y, z);
+}
+
 void MyGL::timerUpdate()
 {
+    timeCount++;
+    //Delete a block every 60 timeCounts
+    int pos = 0;
+    if(timeCount%60==0){
+        std::cout<<"delete time count is: "<<timeCount<<std::endl;
+        pos = timeCount/60;
+        deleteBlock(pos, 0, 0);
+        //addBlock(pos,0,0);
+    }
+    update();
 }

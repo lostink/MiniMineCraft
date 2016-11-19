@@ -160,6 +160,20 @@ void ShaderProgram::draw(Drawable &d)
         context->glVertexAttribPointer(attrCol, 4, GL_FLOAT, false, 0, NULL);
     }
 
+    //===================Added by Yuxin======================//
+    if(attrPos != -1 && d.bindChunk()){
+        context->glEnableVertexAttribArray(attrPos);
+        context->glVertexAttribPointer(attrPos,4,GL_FLOAT,false,3*sizeof(glm::vec4),(void*)0);
+    }
+    if(attrNor != -1 && d.bindChunk()){
+        context->glEnableVertexAttribArray(attrNor);
+        context->glVertexAttribPointer(attrNor,4,GL_FLOAT,false,3*sizeof(glm::vec4),(void*)(sizeof(glm::vec4)));
+    }
+    if(attrCol !=-1 && d.bindChunk()){
+        context->glEnableVertexAttribArray(attrCol);
+        context->glVertexAttribPointer(attrCol,4,GL_FLOAT,false,3*sizeof(glm::vec4),(void*)(sizeof(glm::vec4)*2));
+    }
+
     // Bind the index buffer and then draw shapes from it.
     // This invokes the shader program, which accesses the vertex buffers.
     d.bindIdx();
