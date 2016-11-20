@@ -135,7 +135,10 @@ void MyGL::updateChunkVBO(){
 
 //===========================Added By Yuxin===============================//
 void MyGL::updateChunkVisibility(){
-    //get the player position
+    //get the player position, if the player is at the edge of the chunk
+    if(int(round(Tester.eye[0]))%16==0 && int(round(Tester.eye[1]))%16==0 && int(round(Tester.eye[2]))%16==0){
+        chunkManager.checkVisibility(Tester.eye);
+    }
     //pass the player position to the chunkManager
 }
 
@@ -217,12 +220,10 @@ void MyGL::GLDrawScene()
         }
     }
 }
-
-
 void MyGL::keyPressEvent(QKeyEvent *e)
 {
 
-    float amount = 2.0f;
+    float amount = 0.5f;
     if(e->modifiers() & Qt::ShiftModifier){
         amount = 10.0f;
     }
@@ -246,9 +247,11 @@ void MyGL::keyPressEvent(QKeyEvent *e)
     } else if (e->key() == Qt::Key_2) {
         gl_camera.fovy -= amount;
     } else if (e->key() == Qt::Key_W) {
-        gl_camera.TranslateAlongLook(amount);
+        //gl_camera.TranslateAlongLook(amount);
+        Tester.CheckTranslateAlongLook(amount);
     } else if (e->key() == Qt::Key_S) {
-        gl_camera.TranslateAlongLook(-amount);
+//        gl_camera.TranslateAlongLook(-amount);
+        Tester.CheckTranslateAlongLook(-amount);
     } else if (e->key() == Qt::Key_D) {
         gl_camera.TranslateAlongRight(amount);
     } else if (e->key() == Qt::Key_A) {
@@ -260,6 +263,11 @@ void MyGL::keyPressEvent(QKeyEvent *e)
     } else if (e->key() == Qt::Key_R) {
         gl_camera = Camera(this->width(), this->height());
     }
+    //Test code:
+        else if (e->key() == Qt::Key_Space){
+        Tester.Jump();
+    }
+    //tst end
     gl_camera.RecomputeAttributes();
     update();  // Calls paintGL, among other things
 }
@@ -274,7 +282,8 @@ void MyGL::addBlock(int x, int y, int z){
 
 void MyGL::timerUpdate()
 {
-    timeCount++;
+
+    /*timeCount++;
     //Delete a block every 60 timeCounts
     int pos = 0;
     if(timeCount%60==0){
@@ -283,5 +292,18 @@ void MyGL::timerUpdate()
         deleteBlock(pos, 0, 0);
         //addBlock(pos,0,0);
     }
-    update();
+    update();*/
+
+    //Test code from Lostink
+    //Testing physical system
+        //printf("%lf %lf %lf\n",gl_camera.eye[0],gl_camera.eye[1],gl_camera.eye[2]);
+        tuple<int,int,int> a(32,20,32),b(32,21,31);
+        test[a] = 1;
+        Tester.SetMainCamera(&gl_camera);
+        Tester.SetMesh(&test);
+        Tester.Falling();
+        update();
+    //Test code end
+
 }
+

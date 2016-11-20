@@ -25,6 +25,8 @@ public:
     void clearUpdatedChunks();
 
     void addBlockAt(int x, int y, int z);
+
+    void checkVisibility(glm::vec3 playerPos);
 };
 
 #endif // CHUNKMANAGER_H

@@ -60,6 +60,13 @@ void Drawable::generateCol()
     context->glGenBuffers(1, &bufCol);
 }
 
+void Drawable::generateChunk()
+{
+    chunkBound = true;
+    // Create a VBO on our GPU and store its handle in bufChunk
+    context->glGenBuffers(1, &bufChunk);
+}
+
 bool Drawable::bindIdx()
 {
     if(idxBound) {
@@ -90,4 +97,12 @@ bool Drawable::bindCol()
         context->glBindBuffer(GL_ARRAY_BUFFER, bufCol);
     }
     return colBound;
+}
+
+bool Drawable::bindChunk()
+{
+    if(chunkBound){
+        context->glBindBuffer(GL_ARRAY_BUFFER, bufChunk);
+    }
+    return chunkBound;
 }

@@ -14,7 +14,11 @@ SOURCES += \
     $$PWD/cameracontrolshelp.cpp \
     $$PWD/scene/cube.cpp \
     $$PWD/scene/scene.cpp \
-    $$PWD/scene/transform.cpp
+    $$PWD/scene/transform.cpp \
+    $$PWD/scene/chunk.cpp \
+    $$PWD/scene/block.cpp \
+    $$PWD/scene/chunkmanager.cpp \
+    $$PWD/character.cpp
 
 HEADERS += \
     $$PWD/la.h \
@@ -28,4 +32,8 @@ HEADERS += \
     $$PWD/cameracontrolshelp.h \
     $$PWD/scene/cube.h \
     $$PWD/scene/scene.h \
-    $$PWD/scene/transform.h
+    $$PWD/scene/transform.h \
+    $$PWD/scene/chunk.h \
+    $$PWD/scene/block.h \
+    $$PWD/scene/chunkmanager.h \
+    $$PWD/character.h
