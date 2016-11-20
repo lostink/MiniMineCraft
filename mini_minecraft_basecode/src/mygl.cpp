@@ -17,6 +17,7 @@ MyGL::MyGL(QWidget *parent)
     // Tell the timer to redraw 60 times per second
     timer.start(16);
     setFocusPolicy(Qt::ClickFocus);
+    terrain.createInitialWorld();
 }
 
 MyGL::~MyGL()
@@ -104,17 +105,17 @@ void MyGL::paintGL()
 
 void MyGL::GLDrawScene()
 {
-    for(int x = 0; x < scene.objects.size(); x++)
+    for(int x = 0; x < 64; x++)
     {
         QList<QList<bool>> Xs = scene.objects[x];
-        for(int y = 0; y < Xs.size(); y++)
+        for(int y = 0; y < 64; y++)
         {
             QList<bool> Ys = Xs[x];
-            for(int z = 0; z < Ys.size(); z++)
+            for(int z = 0; z < 64; z++)
             {
-                if(Ys[z])
+                if(terrain.searchBlockAt(x, y, z))
                 {
-                    prog_lambert.setModelMatrix(glm::translate(glm::mat4(), glm::vec3(y, x, z)));
+                    prog_lambert.setModelMatrix(glm::translate(glm::mat4(), glm::vec3(x, y, z)));
                     prog_lambert.draw(geom_cube);
                 }
             }
