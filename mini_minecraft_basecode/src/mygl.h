@@ -14,6 +14,7 @@
 #include <character.h>
 #include <tuple>
 #include <map>
+#include <scene/screencenter.h>
 using std::tuple;
 using std::map;
 //tester code end
@@ -23,6 +24,7 @@ class MyGL
 {
 private:
     Cube geom_cube;// The instance of a unit cube we can use to render any cube. Should NOT be used in final version of your project.
+    screenCenter geom_Center;
     ShaderProgram prog_lambert;// A shader program that uses lambertian reflection
     ShaderProgram prog_flat;// A shader program that uses "flat" reflection (no shadowing at all)
 
@@ -37,6 +39,7 @@ private:
 //Code from lostink for testing character
     character Tester;
     map<tuple<int,int,int>,int> test;
+    bool ShowMouse;
 //tester code end
 public:
     explicit MyGL(QWidget *parent = 0);
@@ -50,7 +53,10 @@ public:
 
 protected:
     void keyPressEvent(QKeyEvent *e);
-
+    //Lostink insert code
+    void mousePressEvent(QMouseEvent *e);
+    void mouseMoveEvent(QMouseEvent *e);
+    //Insert End.
 private slots:
     /// Slot that gets called ~60 times per second
     virtual void timerUpdate();
