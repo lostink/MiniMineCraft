@@ -8,7 +8,7 @@ void character::SetMainCamera(Camera *input)
 {
     WorldCamera = input;
 }
-void character::SetMesh(map<tuple<int, int, int>, int> *input)
+void character::SetMesh(map<tuple<int, int, int>, blocktype> *input)
 {
     mesh = input;
 }
@@ -42,8 +42,8 @@ void character::CheckTranslateAlongLook(float amt){
     int z = (int)temp_eye[2];
     //printf("%d %d %d\n",x,y,z);
     tuple<int,int,int> check1(x,y,z),check2(x,y+1,z);
-    map<tuple<int,int,int>,int>::iterator it1= mesh->find(check1);
-    map<tuple<int,int,int>,int>::iterator it2= mesh->find(check2);
+    map<tuple<int,int,int>,blocktype>::iterator it1= mesh->find(check1);
+    map<tuple<int,int,int>,blocktype>::iterator it2= mesh->find(check2);
     if(it1 == it2)//it1 = it2 ,means there is no block there
     {
         WorldCamera->TranslateAlongLook(amt);
@@ -57,8 +57,8 @@ void character::CheckTranslateAlongRight(float amt){
     int y = (int)temp_eye[1];
     int z = (int)temp_eye[2];
     tuple<int,int,int> check1(x,y,z),check2(x,y+1,z);
-    map<tuple<int,int,int>,int>::iterator it1= mesh->find(check1);
-    map<tuple<int,int,int>,int>::iterator it2= mesh->find(check2);
+    map<tuple<int,int,int>,blocktype>::iterator it1= mesh->find(check1);
+    map<tuple<int,int,int>,blocktype>::iterator it2= mesh->find(check2);
     if(it1 == it2)//it1 = it2 ,means there is no block there
     {
         WorldCamera->TranslateAlongRight(amt);
@@ -72,8 +72,8 @@ void character::CheckTranslateAlongUp(float amt){
     int y = (int)temp_eye[1];
     int z = (int)temp_eye[2];
     tuple<int,int,int> check1(x,y,z),check2(x,y,z+1);
-    map<tuple<int,int,int>,int>::iterator it1= mesh->find(check1);
-    map<tuple<int,int,int>,int>::iterator it2= mesh->find(check2);
+    map<tuple<int,int,int>,blocktype>::iterator it1= mesh->find(check1);
+    map<tuple<int,int,int>,blocktype>::iterator it2= mesh->find(check2);
     if(it1 == it2)//it1 = it2 ,means there is no block there
     {
         WorldCamera->TranslateAlongUp(amt);
@@ -123,7 +123,7 @@ void character::Falling()
         for (int i=0;i<velocity_down+1;++i)
         {
             tuple<int,int,int> check1(x,z-i,y);
-            map<tuple<int,int,int>,int>::iterator it1= mesh->find(check1);
+            map<tuple<int,int,int>,blocktype>::iterator it1= mesh->find(check1);
             if (it1 == mesh->end())
             {
             }
@@ -139,7 +139,7 @@ void character::Falling()
         for (int i=0;i>velocity_down-1;--i)
         {
             tuple<int,int,int> check1(x,z-i,y);
-            map<tuple<int,int,int>,int>::iterator it1= mesh->find(check1);
+            map<tuple<int,int,int>,blocktype>::iterator it1= mesh->find(check1);
             if (it1 == mesh->end())
             {
             }

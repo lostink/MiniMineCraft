@@ -3,6 +3,7 @@
 #include <camera.h>
 #include <map>
 #include <tuple>
+#include <proceduralterrain.h>
 using std::map;
 using std::tuple;
 const float G = 0.01;
@@ -10,12 +11,12 @@ class character : public Camera
 {
 public:
     Camera                      *WorldCamera;
-    map<tuple<int,int,int>,int> *mesh;
+    map<tuple<int,int,int>,blocktype> *mesh;
     float velocity_down;//using to calculate velocity
 
     character();
     void SetMainCamera(Camera *input);
-    void SetMesh(map<tuple<int,int,int>,int> *input);
+    void SetMesh(map<tuple<int,int,int>,blocktype> *input);
 
 
     //Check if the character can move.

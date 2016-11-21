@@ -7,23 +7,33 @@
 
 
 MyGL::MyGL(QWidget *parent)
-    : GLWidget277(parent),
-      geom_cube(this),
+    : GLWidget277(parent),chunkManager(),
       prog_lambert(this), prog_flat(this),
-      gl_camera()
+      gl_camera(),timeCount(0)
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
     connect(&timer, SIGNAL(timeout()), this, SLOT(timerUpdate()));
     // Tell the timer to redraw 60 times per second
     timer.start(16);
     setFocusPolicy(Qt::ClickFocus);
+    terrain.createInitialWorld();
+
+    std::tuple<int, int, int> startPos(0,0,0);
+    for(int x=0; x<4; x++){
+        for(int y=0; y<4; y++){
+            for(int z=0; z<4; z++){
+                startPos = std::tuple<int, int, int>(x*16,y*16,z*16);
+                createNewChunk(terrain.mapWorld,startPos);
+            }
+        }
+    }
 }
 
 MyGL::~MyGL()
 {
     makeCurrent();
     glDeleteVertexArrays(1, &vao);
-    geom_cube.destroy();
+    //geom_cube.destroy();
 }
 
 void MyGL::initializeGL()
@@ -51,7 +61,36 @@ void MyGL::initializeGL()
     glGenVertexArrays(1, &vao);
 
     //Create the instance of Cube
-    geom_cube.create();
+    //geom_cube.create();
+
+    //=====================Added By Yuxin For Testing============================//
+    /*std::vector<std::tuple<int,int,int>> blockInfo;
+    for(int i=0; i<16; i++){
+        for(int j=0; j<16; j++){
+            for(int k=0; k<16; k++){
+                std::tuple<int,int, int> testBlock (i,j,k);
+                blockInfo.push_back(testBlock);
+            }
+        }
+    }
+    std::tuple<int, int, int> startPos(0,0,0);
+    //chunk.createChunk(blockInfo);
+    //chunk.create();
+    createNewChunk(blockInfo,startPos);*/
+
+    /*std::map<std::tuple<int, int, int>,blocktype> blockInfo;
+    for(int i=0; i<16; i++){
+        for(int j=0; j<8; j++){
+            for(int k=0; k<16; k++){
+                std::tuple<int,int, int> testBlock (i,j,k);
+                blockInfo.insert(std::pair<std::tuple<int, int, int>, blocktype>(testBlock,dirt));
+            }
+        }
+    }
+    std::tuple<int, int, int> startPos(0,0,0);
+    createNewChunk(blockInfo,startPos);*/
+
+    //=====================Added By Yuxin For Testing============================//
 
     // Create and set up the diffuse shader
     prog_lambert.create(":/glsl/lambert.vert.glsl", ":/glsl/lambert.frag.glsl");
@@ -70,6 +109,50 @@ void MyGL::initializeGL()
 
     scene.CreateTestScene();
 }
+
+//===========================Added By Yuxin===============================//
+void MyGL::createNewChunk(std::map<std::tuple<int, int, int>,blocktype>& blockInfo,std::tuple<int, int, int> startPos){
+    Chunk* chunk = new Chunk(this);
+    chunk->createChunk(blockInfo,startPos);
+    chunk->setStartPos(glm::vec4(std::get<0>(startPos), std::get<1>(startPos), std::get<2>(startPos),1));
+    //chunk.create();
+    chunkManager.createNewChunk(chunk);
+}
+//===========================Added By Yuxin===============================//
+
+//===========================Added By Yuxin===============================//
+void MyGL::updateChunkVBO(){
+    //****************Create VBOs for the new Chunks****************//
+    Chunk* newChunk = nullptr;
+    for(unsigned int i=0; i<chunkManager.getNewChunks().size(); i++){
+        newChunk = chunkManager.getNewChunks()[i];
+        //Create VBO data for the newly generated chunks
+        newChunk->create();
+    }
+    chunkManager.clearNewChunks();
+    //****************Create VBOs for the chunks that have been changed (deleted/added)*****************//
+    Chunk* updateChunk = nullptr;
+    for(unsigned int i=0; i<chunkManager.getUpdatedChunks().size();i++){
+        std::cout<<"chunk is updated"<<std::endl;
+        updateChunk = chunkManager.getUpdatedChunks()[i];
+        //Create VBO data for the updated chunks
+        updateChunk->create();
+    }
+    chunkManager.clearUpdatedChunks();
+}
+
+//===========================Added By Yuxin===============================//
+
+//===========================Added By Yuxin===============================//
+void MyGL::updateChunkVisibility(){
+    //get the player position, if the player is at the edge of the chunk
+    if(int(round(Tester.eye[0]))%16==0 && int(round(Tester.eye[1]))%16==0 && int(round(Tester.eye[2]))%16==0){
+        chunkManager.checkVisibility(Tester.eye);
+    }
+    //pass the player position to the chunkManager
+}
+
+//===========================Added By Yuxin===============================//
 
 void MyGL::resizeGL(int w, int h)
 {
@@ -99,28 +182,56 @@ void MyGL::paintGL()
     prog_flat.setViewProjMatrix(gl_camera.getViewProj());
     prog_lambert.setViewProjMatrix(gl_camera.getViewProj());
 
-    GLDrawScene();
+    //GLDrawScene();
+    GLRenderWorld();
 }
 
-void MyGL::GLDrawScene()
+//=====================Added by Yuxin==============================//
+void MyGL:: GLRenderWorld()
 {
-    for(int x = 0; x < scene.objects.size(); x++)
+    //Set the model matrix
+    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(0, 0, 32));
+    prog_lambert.setModelMatrix(model);
+    //prog_lambert.draw(chunk);
+
+    //**************Update Chunk VBO*****************//
+    updateChunkVBO();
+
+    //**************Update chunk visibility***********//
+    //if the player position is at the edge of the new chunk, check all chunks visibility
+    updateChunkVisibility();
+
+    //***********Draw world chunks**************//
+    for(unsigned int i=0; i<chunkManager.getChunks().size(); i++){
+        if(chunkManager.getChunks()[i]->isChunkVisible()){
+            prog_lambert.draw(*(chunkManager.getChunks()[i]));
+        }
+    }
+}
+//=====================Added by Yuxin==============================//
+
+
+/*void MyGL::GLDrawScene()
+{
+    for(int x = 0; x < 64; x++)
     {
         QList<QList<bool>> Xs = scene.objects[x];
-        for(int y = 0; y < Xs.size(); y++)
+        for(int y = 0; y < 64; y++)
         {
-            QList<bool> Ys = Xs[x];
-            for(int z = 0; z < Ys.size(); z++)
+            QList<bool> Ys = Xs[y];
+            //for(int z = 0; z < Ys.size(); z++)
+            //QList<bool> Ys = Xs[x];
+            for(int z = 0; z < 64; z++)
             {
-                if(Ys[z])
+                if(terrain.searchBlockAt(x, y, z))
                 {
-                    prog_lambert.setModelMatrix(glm::translate(glm::mat4(), glm::vec3(y, x, z)));
+                    prog_lambert.setModelMatrix(glm::translate(glm::mat4(), glm::vec3(x, y, z)));
                     prog_lambert.draw(geom_cube);
                 }
             }
         }
     }
-}
+}*/
 void MyGL::keyPressEvent(QKeyEvent *e)
 {
 
@@ -148,11 +259,11 @@ void MyGL::keyPressEvent(QKeyEvent *e)
     } else if (e->key() == Qt::Key_2) {
         gl_camera.fovy -= amount;
     } else if (e->key() == Qt::Key_W) {
-        //gl_camera.TranslateAlongLook(amount);
-        Tester.CheckTranslateAlongLook(amount);
+        gl_camera.TranslateAlongLook(amount);
+//        Tester.CheckTranslateAlongLook(amount);
     } else if (e->key() == Qt::Key_S) {
-//        gl_camera.TranslateAlongLook(-amount);
-        Tester.CheckTranslateAlongLook(-amount);
+        gl_camera.TranslateAlongLook(-amount);
+//        Tester.CheckTranslateAlongLook(-amount);
     } else if (e->key() == Qt::Key_D) {
         gl_camera.TranslateAlongRight(amount);
     } else if (e->key() == Qt::Key_A) {
@@ -173,17 +284,38 @@ void MyGL::keyPressEvent(QKeyEvent *e)
     update();  // Calls paintGL, among other things
 }
 
+void MyGL::deleteBlock(int x, int y, int z){
+    chunkManager.deleteBlockAt(x, y, z);
+}
+
+void MyGL::addBlock(int x, int y, int z){
+    chunkManager.addBlockAt(x, y, z);
+}
+
 void MyGL::timerUpdate()
 {
+
+    /*timeCount++;
+    //Delete a block every 60 timeCounts
+    int pos = 0;
+    if(timeCount%60==0){
+        std::cout<<"delete time count is: "<<timeCount<<std::endl;
+        pos = timeCount/60;
+        deleteBlock(pos, 0, 0);
+        //addBlock(pos,0,0);
+    }
+    update();*/
+
     //Test code from Lostink
     //Testing physical system
         //printf("%lf %lf %lf\n",gl_camera.eye[0],gl_camera.eye[1],gl_camera.eye[2]);
-        tuple<int,int,int> a(32,20,32),b(32,21,31);
-        test[a] = 1;
+        //tuple<int,int,int> a(32,20,32),b(32,21,31);
+        //test[a] = 1;
         Tester.SetMainCamera(&gl_camera);
-        Tester.SetMesh(&test);
-        Tester.Falling();
+        Tester.SetMesh(&terrain.mapWorld);
+        //Tester.Falling();
         update();
     //Test code end
+
 }
-//
+
