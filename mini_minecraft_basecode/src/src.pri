@@ -18,6 +18,7 @@ SOURCES += \
     $$PWD/scene/chunk.cpp \
     $$PWD/scene/block.cpp \
     $$PWD/scene/chunkmanager.cpp \
+    $$PWD/proceduralterrain.cpp \
     $$PWD/character.cpp
 
 HEADERS += \
@@ -36,4 +37,5 @@ HEADERS += \
     $$PWD/scene/chunk.h \
     $$PWD/scene/block.h \
     $$PWD/scene/chunkmanager.h \
+    $$PWD/proceduralterrain.h \
     $$PWD/character.h

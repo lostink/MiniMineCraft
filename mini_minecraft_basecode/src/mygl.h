@@ -9,7 +9,7 @@
 #include <scene/scene.h>
 #include <scene/chunk.h>
 #include <scene/chunkmanager.h>
-
+#include <proceduralterrain.h>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLShaderProgram>
 //Code from lostink for testing character
@@ -24,14 +24,16 @@ class MyGL
     : public GLWidget277
 {
 private:
-    Cube geom_cube;// The instance of a unit cube we can use to render any cube. Should NOT be used in final version of your project.
+    //Cube geom_cube;// The instance of a unit cube we can use to render any cube. Should NOT be used in final version of your project.
     //===============Added By Yuxin===============//
-    Chunk chunk;
+    //Chunk chunk;
     ChunkManager chunkManager;
     //===============Added By Yuxin===============//
     ShaderProgram prog_lambert;// A shader program that uses lambertian reflection
     ShaderProgram prog_flat;// A shader program that uses "flat" reflection (no shadowing at all)
     int timeCount; //Testing for update chunks
+
+    ProceduralTerrain terrain;
 
     GLuint vao; // A handle for our vertex array object. This will store the VBOs created in our geometry classes.
                 // Don't worry too much about this. Just know it is necessary in order to render geometry.
@@ -57,7 +59,7 @@ public:
 
     //==============Added By Yuxin=============//
     void GLRenderWorld();
-    void createNewChunk(std::map<std::tuple<int, int, int>, int> &blockInfo, std::tuple<int, int, int> startPos);
+    void createNewChunk(std::map<std::tuple<int, int, int>, blocktype> &blockInfo, std::tuple<int, int, int> startPos);
     void updateChunkVBO();
     void updateChunkVisibility();
     void deleteBlock(int x, int y, int z);

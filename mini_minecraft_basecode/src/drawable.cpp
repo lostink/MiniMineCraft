@@ -2,7 +2,7 @@
 #include <la.h>
 
 Drawable::Drawable(GLWidget277* context)
-    : bufIdx(), bufPos(), bufNor(), bufCol(),
+    : bufIdx(), bufPos(), bufNor(), bufCol(),bufChunk(),
       idxBound(false), posBound(false), norBound(false), colBound(false),
       context(context)
 {}
@@ -14,6 +14,7 @@ void Drawable::destroy()
     context->glDeleteBuffers(1, &bufPos);
     context->glDeleteBuffers(1, &bufNor);
     context->glDeleteBuffers(1, &bufCol);
+    context->glDeleteBuffers(1, &bufChunk);
 }
 
 GLenum Drawable::drawMode()

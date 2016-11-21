@@ -3,6 +3,7 @@
 #include <drawable.h>
 #include <QList>
 #include <scene\block.h>
+#include <proceduralterrain.h>
 
 
 
@@ -21,7 +22,7 @@ public:
 
     virtual void create();
 
-    void createChunk(std::map<std::tuple<int, int, int>, int> &blockInfo, std::tuple<int, int, int> startPos);
+    void createChunk(std::map<std::tuple<int, int, int>, blocktype> &blockInfo, std::tuple<int, int, int> startPos);
 
     glm::vec4 getStartPos();
 

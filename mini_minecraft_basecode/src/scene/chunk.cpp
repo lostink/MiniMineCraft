@@ -13,7 +13,7 @@ void Chunk::setStartPos(glm::vec4 start){
     startPos = start;
 }
 
-void Chunk::createChunk(std::map<std::tuple<int, int, int>,int> &blockInfo, std::tuple<int, int, int> startPos){
+void Chunk::createChunk(std::map<std::tuple<int, int, int>,blocktype> &blockInfo, std::tuple<int, int, int> startPos){
     //Pop in all blocks in chunk
     //Question better to use Array?? Since it takes 3 iterations to initialize blocks
     for(int i=0; i<CHUNK_SIZE;i++){
@@ -210,11 +210,12 @@ void createChunkVerts(std::vector<glm::vec4>& chunk_vert, std::vector<GLuint>& c
                     }
                     createCube(chunk_vert, startPos[0]+i,startPos[1]+j,startPos[2]+k,negativeX,positiveX, negativeY,
                             positiveY, negativeZ, positiveZ);
-                    createCubeIndex(chunk_idx, chunk_vert.size()/12);
+                    //createCubeIndex(chunk_idx, chunk_vert.size()/12);
                 }
             }
         }
     }
+    createCubeIndex(chunk_idx, chunk_vert.size()/12);
 }
 
 void Chunk::create(){
@@ -244,6 +245,9 @@ void Chunk::create(){
     generateChunk();
     context->glBindBuffer(GL_ARRAY_BUFFER,bufChunk);
     context->glBufferData(GL_ARRAY_BUFFER, CHUNK_VERT_COUNT*sizeof(glm::vec4),chunk_vert.data(), GL_STATIC_DRAW);
+
+    chunk_idx.clear();
+    chunk_vert.clear();
 }
 
 void Chunk::setChunkVisible(bool chunkVisible){

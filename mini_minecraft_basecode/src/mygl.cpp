@@ -7,8 +7,7 @@
 
 
 MyGL::MyGL(QWidget *parent)
-    : GLWidget277(parent),
-      geom_cube(this),chunk(this),chunkManager(),
+    : GLWidget277(parent),chunkManager(),
       prog_lambert(this), prog_flat(this),
       gl_camera(),timeCount(0)
 {
@@ -17,13 +16,24 @@ MyGL::MyGL(QWidget *parent)
     // Tell the timer to redraw 60 times per second
     timer.start(16);
     setFocusPolicy(Qt::ClickFocus);
+    terrain.createInitialWorld();
+
+    std::tuple<int, int, int> startPos(0,0,0);
+    for(int x=0; x<4; x++){
+        for(int y=0; y<4; y++){
+            for(int z=0; z<4; z++){
+                startPos = std::tuple<int, int, int>(x*16,y*16,z*16);
+                createNewChunk(terrain.mapWorld,startPos);
+            }
+        }
+    }
 }
 
 MyGL::~MyGL()
 {
     makeCurrent();
     glDeleteVertexArrays(1, &vao);
-    geom_cube.destroy();
+    //geom_cube.destroy();
 }
 
 void MyGL::initializeGL()
@@ -51,7 +61,7 @@ void MyGL::initializeGL()
     glGenVertexArrays(1, &vao);
 
     //Create the instance of Cube
-    geom_cube.create();
+    //geom_cube.create();
 
     //=====================Added By Yuxin For Testing============================//
     /*std::vector<std::tuple<int,int,int>> blockInfo;
@@ -68,17 +78,17 @@ void MyGL::initializeGL()
     //chunk.create();
     createNewChunk(blockInfo,startPos);*/
 
-    std::map<std::tuple<int, int, int>,int> blockInfo;
+    /*std::map<std::tuple<int, int, int>,blocktype> blockInfo;
     for(int i=0; i<16; i++){
         for(int j=0; j<8; j++){
             for(int k=0; k<16; k++){
                 std::tuple<int,int, int> testBlock (i,j,k);
-                blockInfo.insert(std::pair<std::tuple<int, int, int>, int>(testBlock,0));
+                blockInfo.insert(std::pair<std::tuple<int, int, int>, blocktype>(testBlock,dirt));
             }
         }
     }
     std::tuple<int, int, int> startPos(0,0,0);
-    createNewChunk(blockInfo,startPos);
+    createNewChunk(blockInfo,startPos);*/
 
     //=====================Added By Yuxin For Testing============================//
 
@@ -101,7 +111,7 @@ void MyGL::initializeGL()
 }
 
 //===========================Added By Yuxin===============================//
-void MyGL::createNewChunk(std::map<std::tuple<int, int, int>,int>& blockInfo,std::tuple<int, int, int> startPos){
+void MyGL::createNewChunk(std::map<std::tuple<int, int, int>,blocktype>& blockInfo,std::tuple<int, int, int> startPos){
     Chunk* chunk = new Chunk(this);
     chunk->createChunk(blockInfo,startPos);
     chunk->setStartPos(glm::vec4(std::get<0>(startPos), std::get<1>(startPos), std::get<2>(startPos),1));
@@ -180,7 +190,7 @@ void MyGL::paintGL()
 void MyGL:: GLRenderWorld()
 {
     //Set the model matrix
-    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(10, 20, 80));
+    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(0, 0, 32));
     prog_lambert.setModelMatrix(model);
     //prog_lambert.draw(chunk);
 
@@ -201,25 +211,27 @@ void MyGL:: GLRenderWorld()
 //=====================Added by Yuxin==============================//
 
 
-void MyGL::GLDrawScene()
+/*void MyGL::GLDrawScene()
 {
-    for(int x = 0; x < scene.objects.size(); x++)
+    for(int x = 0; x < 64; x++)
     {
         QList<QList<bool>> Xs = scene.objects[x];
-        for(int y = 0; y < Xs.size(); y++)
+        for(int y = 0; y < 64; y++)
         {
             QList<bool> Ys = Xs[y];
-            for(int z = 0; z < Ys.size(); z++)
+            //for(int z = 0; z < Ys.size(); z++)
+            //QList<bool> Ys = Xs[x];
+            for(int z = 0; z < 64; z++)
             {
-                if(Ys[z])
+                if(terrain.searchBlockAt(x, y, z))
                 {
-                    prog_lambert.setModelMatrix(glm::translate(glm::mat4(), glm::vec3(y, x, z)));
+                    prog_lambert.setModelMatrix(glm::translate(glm::mat4(), glm::vec3(x, y, z)));
                     prog_lambert.draw(geom_cube);
                 }
             }
         }
     }
-}
+}*/
 void MyGL::keyPressEvent(QKeyEvent *e)
 {
 
@@ -247,11 +259,11 @@ void MyGL::keyPressEvent(QKeyEvent *e)
     } else if (e->key() == Qt::Key_2) {
         gl_camera.fovy -= amount;
     } else if (e->key() == Qt::Key_W) {
-        //gl_camera.TranslateAlongLook(amount);
-        Tester.CheckTranslateAlongLook(amount);
+        gl_camera.TranslateAlongLook(amount);
+//        Tester.CheckTranslateAlongLook(amount);
     } else if (e->key() == Qt::Key_S) {
-//        gl_camera.TranslateAlongLook(-amount);
-        Tester.CheckTranslateAlongLook(-amount);
+        gl_camera.TranslateAlongLook(-amount);
+//        Tester.CheckTranslateAlongLook(-amount);
     } else if (e->key() == Qt::Key_D) {
         gl_camera.TranslateAlongRight(amount);
     } else if (e->key() == Qt::Key_A) {
@@ -297,11 +309,11 @@ void MyGL::timerUpdate()
     //Test code from Lostink
     //Testing physical system
         //printf("%lf %lf %lf\n",gl_camera.eye[0],gl_camera.eye[1],gl_camera.eye[2]);
-        tuple<int,int,int> a(32,20,32),b(32,21,31);
-        test[a] = 1;
+        //tuple<int,int,int> a(32,20,32),b(32,21,31);
+        //test[a] = 1;
         Tester.SetMainCamera(&gl_camera);
-        Tester.SetMesh(&test);
-        Tester.Falling();
+        Tester.SetMesh(&terrain.mapWorld);
+        //Tester.Falling();
         update();
     //Test code end
 
