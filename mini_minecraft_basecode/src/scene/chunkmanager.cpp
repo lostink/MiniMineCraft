@@ -1,4 +1,5 @@
 #include "chunkmanager.h"
+#include <iostream>
 
 ChunkManager::ChunkManager()
 {
@@ -7,6 +8,7 @@ ChunkManager::ChunkManager()
 
 ChunkManager::~ChunkManager(){
     for(unsigned int i=0; i<chunkLists.size(); i++){
+        chunkLists[i]->destroy();
         delete chunkLists[i];
         chunkLists[i] = nullptr;
     }
@@ -35,9 +37,9 @@ void ChunkManager::deleteBlockAt(int x, int y, int z){
     //Find which chunk is the block at
     Chunk* targetChunk = nullptr;
     for(unsigned int i=0 ;i<chunkLists.size(); i++){
-        if(x>=chunkLists[i]->getStartPos()[0] && x<=chunkLists[i]->getStartPos()[0]+CHUNK_SIZE){
-            if(y>=chunkLists[i]->getStartPos()[1] && y<=chunkLists[i]->getStartPos()[1]+CHUNK_SIZE){
-                if(z>=chunkLists[i]->getStartPos()[2] && z<=chunkLists[i]->getStartPos()[2]+CHUNK_SIZE){
+        if(x>=chunkLists[i]->getStartPos()[0] && x<chunkLists[i]->getStartPos()[0]+CHUNK_SIZE){
+            if(y>=chunkLists[i]->getStartPos()[1] && y<chunkLists[i]->getStartPos()[1]+CHUNK_SIZE){
+                if(z>=chunkLists[i]->getStartPos()[2] && z<chunkLists[i]->getStartPos()[2]+CHUNK_SIZE){
                     targetChunk = chunkLists[i];
                     break;
                 }
@@ -62,9 +64,9 @@ void ChunkManager::addBlockAt(int x, int y, int z){
     //Find which chunk is the block at
     Chunk* targetChunk = nullptr;
     for(unsigned int i=0 ;i<chunkLists.size(); i++){
-        if(x>=chunkLists[i]->getStartPos()[0] && x<=chunkLists[i]->getStartPos()[0]+CHUNK_SIZE){
-            if(y>=chunkLists[i]->getStartPos()[1] && y<=chunkLists[i]->getStartPos()[1]+CHUNK_SIZE){
-                if(z>=chunkLists[i]->getStartPos()[2] && z<=chunkLists[i]->getStartPos()[2]+CHUNK_SIZE){
+        if(x>=chunkLists[i]->getStartPos()[0] && x<chunkLists[i]->getStartPos()[0]+CHUNK_SIZE){
+            if(y>=chunkLists[i]->getStartPos()[1] && y<chunkLists[i]->getStartPos()[1]+CHUNK_SIZE){
+                if(z>=chunkLists[i]->getStartPos()[2] && z<chunkLists[i]->getStartPos()[2]+CHUNK_SIZE){
                     targetChunk = chunkLists[i];
                     break;
                 }
