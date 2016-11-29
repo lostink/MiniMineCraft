@@ -146,7 +146,7 @@ void MyGL::updateChunkVBO(){
 //===========================Added By Yuxin===============================//
 void MyGL::updateChunkVisibility(){
     //get the player position, if the player is at the edge of the chunk
-    if(int(round(Tester.eye[0]))%16==0 && int(round(Tester.eye[1]))%16==0 && int(round(Tester.eye[2]))%16==0){
+    if(int(round(Tester.eye[0]))%16==0 || int(round(Tester.eye[2]))%16==0){
         chunkManager.checkVisibility(Tester.eye);
     }
     //pass the player position to the chunkManager
