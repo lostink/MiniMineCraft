@@ -120,7 +120,7 @@ void MyGL::updateChunkVBO(){
     //****************Create VBOs for the chunks that have been changed (deleted/added)*****************//
     Chunk* updateChunk = nullptr;
     for(unsigned int i=0; i<chunkManager.getUpdatedChunks().size();i++){
-        std::cout<<"chunk is updated"<<std::endl;
+        //std::cout<<"chunk is updated"<<std::endl;
         updateChunk = chunkManager.getUpdatedChunks()[i];
         //Create VBO data for the updated chunks
         updateChunk->create();
