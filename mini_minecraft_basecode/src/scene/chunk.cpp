@@ -61,11 +61,11 @@ void Chunk::createChunk(std::map<std::tuple<int, int, int>,blocktype> &blockInfo
 void createCubeVertAttribute(std::vector<glm::vec4>& pos,std::vector<glm::vec4>& nor,std::vector<glm::vec4>& col,
                         int i, int j, int k,bool negativeX, bool positiveX,
                         bool negativeY, bool positiveY, bool negativeZ, bool positiveZ){
-    //Do not render left face if negativeX is true
+    //Do not render right face if negativeX is true
     if(!negativeX){
         pos.push_back(glm::vec4(i,j+1,k,1));
-        pos.push_back(glm::vec4(i,j+1,k-1,1));
-        pos.push_back(glm::vec4(i,j,k-1,1));
+        pos.push_back(glm::vec4(i,j+1,k+1,1));
+        pos.push_back(glm::vec4(i,j,k+1,1));
         pos.push_back(glm::vec4(i,j,k,1));
 
         for(int i=0; i<4; i++){
@@ -73,65 +73,65 @@ void createCubeVertAttribute(std::vector<glm::vec4>& pos,std::vector<glm::vec4>&
             col.push_back(glm::vec4(0,1,0,1));
         }
     }
-    //Right Face
+    //Left Face
     if(!positiveX){
         //Right Side Face
         pos.push_back(glm::vec4(i+1,j+1,k,1));
         pos.push_back(glm::vec4(i+1,j,k,1));
-        pos.push_back(glm::vec4(i+1,j,k-1,1));
-        pos.push_back(glm::vec4(i+1,j+1,k-1,1));
+        pos.push_back(glm::vec4(i+1,j,k+1,1));
+        pos.push_back(glm::vec4(i+1,j+1,k+1,1));
 
         for(int i=0; i<4; i++){
             nor.push_back(glm::vec4(1,0,0,0));
-            col.push_back(glm::vec4(0,1,0,1));
+            col.push_back(glm::vec4(1,0,0,1));
         }
     }
     //Bottom Face
     if(!negativeY){
         pos.push_back(glm::vec4(i,j,k,1));
-        pos.push_back(glm::vec4(i,j,k-1,1));
-        pos.push_back(glm::vec4(i+1,j,k-1,1));
+        pos.push_back(glm::vec4(i,j,k+1,1));
+        pos.push_back(glm::vec4(i+1,j,k+1,1));
         pos.push_back(glm::vec4(i+1,j,k,1));
 
         for(int i=0; i<4; i++){
             nor.push_back(glm::vec4(0,-1,0,0));
-            col.push_back(glm::vec4(0,1,0,1));
+            col.push_back(glm::vec4(0,0,1,1));
         }
     }
     //Top Face
     if(!positiveY){
         pos.push_back(glm::vec4(i+1,j+1,k,1));
-        pos.push_back(glm::vec4(i+1,j+1,k-1,1));
-        pos.push_back(glm::vec4(i,j+1,k-1,1));
+        pos.push_back(glm::vec4(i+1,j+1,k+1,1));
+        pos.push_back(glm::vec4(i,j+1,k+1,1));
         pos.push_back(glm::vec4(i,j+1,k,1));
 
         for(int i=0; i<4; i++){
             nor.push_back(glm::vec4(0,1,0,0));
-            col.push_back(glm::vec4(0,1,0,1));
-        }
-    }
-    //Back Face
-    if(!negativeZ){
-        pos.push_back(glm::vec4(i,j,k-1,1));
-        pos.push_back(glm::vec4(i+1,j,k-1,1));
-        pos.push_back(glm::vec4(i+1,j+1,k-1,1));
-        pos.push_back(glm::vec4(i,j+1,k-1,1));
-
-        for(int i=0; i<4; i++){
-            nor.push_back(glm::vec4(0,0,-1,0));
-            col.push_back(glm::vec4(0,1,0,1));
+            col.push_back(glm::vec4(1,1,0,1));
         }
     }
     //Front Face
-    if(!positiveZ){
+    if(!negativeZ){
         pos.push_back(glm::vec4(i,j,k,1));
         pos.push_back(glm::vec4(i+1,j,k,1));
         pos.push_back(glm::vec4(i+1,j+1,k,1));
         pos.push_back(glm::vec4(i,j+1,k,1));
 
         for(int i=0; i<4; i++){
+            nor.push_back(glm::vec4(0,0,-1,0));
+            col.push_back(glm::vec4(0,1,1,1));
+        }
+    }
+    //Back Face
+    if(!positiveZ){
+        pos.push_back(glm::vec4(i,j,k+1,1));
+        pos.push_back(glm::vec4(i+1,j,k+1,1));
+        pos.push_back(glm::vec4(i+1,j+1,k+1,1));
+        pos.push_back(glm::vec4(i,j+1,k+1,1));
+
+        for(int i=0; i<4; i++){
             nor.push_back(glm::vec4(0,0,1,0));
-            col.push_back(glm::vec4(0,1,0,1));
+            col.push_back(glm::vec4(1,0,1,1));
         }
     }
 
