@@ -2,7 +2,7 @@
 #include <la.h>
 
 Drawable::Drawable(GLWidget277* context)
-    : bufIdx(), bufPos(), bufNor(), bufCol(),
+    : bufIdx(), bufPos(), bufNor(), bufCol(),bufChunk(),
       idxBound(false), posBound(false), norBound(false), colBound(false),
       context(context)
 {}
@@ -14,6 +14,7 @@ void Drawable::destroy()
     context->glDeleteBuffers(1, &bufPos);
     context->glDeleteBuffers(1, &bufNor);
     context->glDeleteBuffers(1, &bufCol);
+    context->glDeleteBuffers(1, &bufChunk);
 }
 
 GLenum Drawable::drawMode()
@@ -60,6 +61,13 @@ void Drawable::generateCol()
     context->glGenBuffers(1, &bufCol);
 }
 
+void Drawable::generateChunk()
+{
+    chunkBound = true;
+    // Create a VBO on our GPU and store its handle in bufChunk
+    context->glGenBuffers(1, &bufChunk);
+}
+
 bool Drawable::bindIdx()
 {
     if(idxBound) {
@@ -90,4 +98,12 @@ bool Drawable::bindCol()
         context->glBindBuffer(GL_ARRAY_BUFFER, bufCol);
     }
     return colBound;
+}
+
+bool Drawable::bindChunk()
+{
+    if(chunkBound){
+        context->glBindBuffer(GL_ARRAY_BUFFER, bufChunk);
+    }
+    return chunkBound;
 }
