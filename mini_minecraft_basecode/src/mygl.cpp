@@ -24,7 +24,7 @@ MyGL::MyGL(QWidget *parent)
     QCursor c = cursor();
     c.setPos(mapToGlobal(QPoint(width() / 2, height() / 2)));
     setCursor(c);
-    flag_amount_speed = 2.0 / 60.0;
+    flag_amount_speed = 5.0 / 60.0;
     flag_moving_forward = 0;
     flag_moving_right = 0;
     flag_rotate_right = 0;
