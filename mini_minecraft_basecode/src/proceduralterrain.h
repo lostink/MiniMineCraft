@@ -3,6 +3,7 @@
 #include <map>
 #include <tuple>
 #include <cmath>
+#include <iostream>
 
 using namespace std;
 enum blocktype{dirt = 0, grass = 1, lava = 2};
@@ -15,9 +16,8 @@ public:
 
     ProceduralTerrain();
     float Noise(int x, int z);// The basic noise function
-    double lerp(float a0,float a1,float w);// Linear Interpolation
-    float SmoothNoise_1(int x,int y);// Smooth the noise function
-    float InterpolatedNoise_1(float x,float y);//Interpolate the noise function
+    float SmoothNoise_1(int x,int y);
+    float InterpolatedNoise_1(float x,float y);
 
     int PerlinNoise(float x, float z);// Perlin Noise function
 
@@ -28,5 +28,11 @@ public:
     void addNewChunk(int x, int z);// Add a new chunk start from x, z
 
 
+    //Here are code from wikipedia about 2-D noise
+    //Abandoned. Only lerp is still in use
+    double lerp(float a0,float a1,float w);
+//    double dotGridGradient(int ix,int iy,float x,float y);
+//    double PL_New(float x,float y);
 };
+
 #endif // PROCEDURALTERRAIN_H
