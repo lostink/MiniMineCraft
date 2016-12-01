@@ -277,9 +277,12 @@ void MyGL::keyPressEvent(QKeyEvent *e)
 //        NewChunk();
         flag_moving_left = 1;
     } else if (e->key() == Qt::Key_Q) {
-
+        if (Tester.DisableFlyingAndCollision == 1)
+            flag_moving_down = 1;
     } else if (e->key() == Qt::Key_E) {
 //        gl_camera.TranslateAlongUp(amount);
+        if (Tester.DisableFlyingAndCollision == 1)
+            flag_moving_up = 1;
     } else if (e->key() == Qt::Key_R) {
 //        gl_camera = Camera(this->width(), this->height());
     } else if (e->key() == Qt::Key_Space){
@@ -287,6 +290,9 @@ void MyGL::keyPressEvent(QKeyEvent *e)
     }else if (e->key() == Qt::Key_F3)
     {
         ShowMouse^=1;
+    }else if (e->key() == Qt::Key_F)
+    {
+        Tester.ChangeFlyingAndCollision();
     }
     //tst end
     gl_camera.RecomputeAttributes();
@@ -311,6 +317,10 @@ void MyGL::keyReleaseEvent(QKeyEvent *e)
         flag_rotate_up = 0;
     } else if (e->key() == Qt::Key_Down) {
         flag_rotate_down = 0;
+    } else if (e->key() == Qt::Key_Q){
+        flag_moving_down = 0;
+    } else if (e->key() == Qt::Key_E){
+        flag_moving_up = 0;
     }
 }
 void MyGL::mousePressEvent(QMouseEvent *e)
@@ -362,6 +372,16 @@ void MyGL::Moving(){
     {
         Tester.CheckTranslateAlongRight(flag_amount_speed);
         NewChunk();
+    }
+    if (flag_moving_down && flag_moving_up)
+    {}
+    else if (flag_moving_down)
+    {
+        Tester.CheckTranslateAlongUp(-flag_amount_speed);
+    }
+    else if (flag_moving_up)
+    {
+        Tester.CheckTranslateAlongUp(flag_amount_speed);
     }
 }
 //Insert End.

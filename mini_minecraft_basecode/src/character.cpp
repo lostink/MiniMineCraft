@@ -3,6 +3,7 @@
 character::character():WorldCamera(nullptr),mesh(nullptr),velocity_down(0),Manager(nullptr),terrain(nullptr)
 {
     upAngle = 0;
+    DisableFlyingAndCollision = 0;
     velocity_down = 0;
 }
 void character::SetMainCamera(Camera *input)
@@ -43,6 +44,13 @@ void character::RenewPlace(Camera *MainCamera){
 //These three functions will
 
 void character::CheckTranslateAlongLook(float amt){
+    if(DisableFlyingAndCollision == 1)
+    {
+        WorldCamera->NoYTranslateAlongLook(amt);
+        RenewPlace(WorldCamera);
+        RefreshBound();
+        return;
+    }
     glm::vec3 forward_vec = glm::vec3(look[0],0,look[2]);
     forward_vec = glm::normalize(forward_vec);
     glm::vec3 translation = forward_vec * (amt>0?amt + 0.3f:amt - 0.3f);//Treat character as a cylinder
@@ -63,6 +71,13 @@ void character::CheckTranslateAlongLook(float amt){
     }
 }
 void character::CheckTranslateAlongRight(float amt){
+    if (DisableFlyingAndCollision == 1)
+    {
+        WorldCamera->TranslateAlongRight(amt);
+        RenewPlace(WorldCamera);
+        RefreshBound();
+        return;
+    }
     glm::vec3 translation = right * (amt>0? amt + 0.3f:amt -0.3f);//Treat character as a cylinder
     glm::vec3 temp_eye = eye + translation;
     int x = (int)temp_eye[0];
@@ -80,6 +95,12 @@ void character::CheckTranslateAlongRight(float amt){
 }
 void character::CheckTranslateAlongUp(float amt){
     //printf("%f %f %f\n",world_up[0],world_up[1],world_up[2]);
+    if (DisableFlyingAndCollision == 1)
+    {
+        WorldCamera->YTranslate(amt);
+        RenewPlace(WorldCamera);
+        return;
+    }
     glm::vec3 translation = world_up * (amt);//Treat character as a cylinder
     glm::vec3 temp_eye = eye + translation;
     int x = (int)temp_eye[0];
@@ -119,6 +140,11 @@ void character::CheckRotateAboutUp(float deg)
 void character::Jump()
 {
     //printf("%f %f %f\n",eye[0],eye[1],eye[2]);
+    if (DisableFlyingAndCollision)
+    {
+        CheckTranslateAlongUp(0.5);
+        return;
+    }
     if (fabs(velocity_down) < 1e-7){
         //if u r in the air u cannot jump
         velocity_down = -0.5;
@@ -129,6 +155,8 @@ void character::Jump()
 void character::Falling()
 {
     //printf("%f\n",velocity_down);
+    if (DisableFlyingAndCollision == 1)
+        return;
     if (mesh == nullptr)
         return;
     velocity_down += G;
@@ -359,6 +387,10 @@ void character::RefreshBound()
             }
         }
     }
+}
+void character::ChangeFlyingAndCollision()
+{
+    DisableFlyingAndCollision ^= 1;
 }
 vector<tuple<int,int,int>>* character::GetNewBlockVec()
 {
