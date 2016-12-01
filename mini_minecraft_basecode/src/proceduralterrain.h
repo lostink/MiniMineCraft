@@ -15,13 +15,10 @@ public:
 
     ProceduralTerrain();
     float Noise(int x, int z);// The basic noise function
-    float SmoothNoise_1(int x,int y);
-    float InterpolatedNoise_1(float x,float y);
-    /*
-    float SmoothNoise(float x, float y);// Smooth the output of the noise function
-    float Interpolate(float x, float y, float frac);// Linear interpolation
-    float InterpolatedNoise(float x, float y);// Interpolate Noise function
-    */
+    double lerp(float a0,float a1,float w);// Linear Interpolation
+    float SmoothNoise_1(int x,int y);// Smooth the noise function
+    float InterpolatedNoise_1(float x,float y);//Interpolate the noise function
+
     int PerlinNoise(float x, float z);// Perlin Noise function
 
     void createInitialWorld();// Create the initial 64 * 64 * 64 World
@@ -31,11 +28,5 @@ public:
     void addNewChunk(int x, int z);// Add a new chunk start from x, z
 
 
-    //Here are code from wikipedia about 2-D noise
-    //Abandoned. Only lerp is still in use
-    double lerp(float a0,float a1,float w);
-//    double dotGridGradient(int ix,int iy,float x,float y);
-//    double PL_New(float x,float y);
 };
-
 #endif // PROCEDURALTERRAIN_H
