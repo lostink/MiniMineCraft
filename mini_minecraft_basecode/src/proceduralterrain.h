@@ -3,6 +3,7 @@
 #include <map>
 #include <tuple>
 #include <cmath>
+#include <iostream>
 
 using namespace std;
 enum blocktype{dirt = 0, grass = 1, lava = 2};
@@ -17,11 +18,7 @@ public:
     float Noise(int x, int z);// The basic noise function
     float SmoothNoise_1(int x,int y);
     float InterpolatedNoise_1(float x,float y);
-    /*
-    float SmoothNoise(float x, float y);// Smooth the output of the noise function
-    float Interpolate(float x, float y, float frac);// Linear interpolation
-    float InterpolatedNoise(float x, float y);// Interpolate Noise function
-    */
+
     int PerlinNoise(float x, float z);// Perlin Noise function
 
     void createInitialWorld();// Create the initial 64 * 64 * 64 World

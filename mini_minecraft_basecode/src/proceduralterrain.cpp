@@ -11,7 +11,7 @@ float ProceduralTerrain::Noise(int x, int z)
     int n;//?
     n = x + z * 57;
     n = (n<<13) ^ n;
-    return (( 1.0 - ( (n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff) / 1073741824.0));
+    return (( 1.0 - ( (n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff) / 1073741824.0)) / 2.0 + 0.5;
 }
 float ProceduralTerrain::SmoothNoise_1(int x,int y)
 {
@@ -21,25 +21,32 @@ float ProceduralTerrain::SmoothNoise_1(int x,int y)
     return corners + sides + center;
 }
 float ProceduralTerrain::InterpolatedNoise_1(float x, float y)
-{
-    int integer_X = int(x);
+{    
+    int integer_X = int(x>0?x:x-1);
     float fractional_X = x - integer_X;
-    int integer_Y = int(y);
+    int integer_Y = int(y>0?y:y-1);
     float fractional_Y = y - integer_Y;
+
     float v1 = SmoothNoise_1(integer_X, integer_Y);
     float v2 = SmoothNoise_1(integer_X + 1, integer_Y);
     float v3 = SmoothNoise_1(integer_X, integer_Y + 1);
     float v4 = SmoothNoise_1(integer_X + 1, integer_Y + 1);
+
     float i1 = lerp(v1 , v2 , fractional_X);
     float i2 = lerp(v3 , v4 , fractional_X);
+
     return lerp(i1 , i2 , fractional_Y);
 }
 // Perlin Noise function
 int ProceduralTerrain::PerlinNoise(float x, float z)
 {
+    x+=0.37;
+    z+=0.37;
+    x /= 10.0f;
+    z /= 10.0f;
     float y = 0;
     float p = 1.0/4.0;// Persistence
-    int n = 5;// Octave
+    int n = 1;// Octave
     float f = 1.0;// Frequency
     float A = 64.0;// Amplitude
     int result;
@@ -47,12 +54,9 @@ int ProceduralTerrain::PerlinNoise(float x, float z)
     {
         f = pow(2, 1.0*i);
         A = pow(p, 1.0*i);
-        //printf("%lf %lf\n",f,A);
         y = y + A * InterpolatedNoise_1(f * x, f * z);
-        //printf("%f\n", y);
     }
-    y /= n;
-    result = int((y + 1) * 32.0);
+    result = (y * 32.0);
     return result;
 }
 
@@ -64,15 +68,12 @@ void ProceduralTerrain::createInitialWorld()
     {
         for(int z = 0; z < 64; ++z)
         {
-            //y = PerlinNoise(x ,z);
-            y = PerlinNoise(1.0 * x / 10.0,1.0 * z / 10.0);
-            //y = PL_New(1.0 * x / 50.0,1.0 * z / 50.0);
+            y = PerlinNoise(1.0 * x,1.0 * z);
             for(int i = 0; i <= y; ++i)
             {
                 tuple<int, int, int> position(x, i, z);
                 mapWorld.insert(pair<tuple<int, int, int>, blocktype>(position, dirt));
             }
-            //printf("%d,%d,%d\n", x, y, z);
         }
     }
 }
@@ -112,12 +113,10 @@ void ProceduralTerrain::addNewChunk(int x, int z)
     for(int i = 0; i < 16; ++i)
         for(int j = 0; j < 16; ++j)
         {
-            //y = PerlinNoise(x+i ,z+j);
-            //y = PL_New(x+i,z+j);
-            y = PerlinNoise(1.0 * (x+i) / 10.0,1.0 * (z+j) / 10.0);
+            y = PerlinNoise(1.0 * (x+i),1.0 * (z+j));
             for(int k = 0; k <= y; ++k)
             {
-                tuple<int, int, int> position(x, k, z);
+                tuple<int, int, int> position(x +i , k, z + j);
                 mapWorld.insert(pair<tuple<int, int, int>, blocktype>(position, dirt));
             }
         }
@@ -126,41 +125,8 @@ void ProceduralTerrain::addNewChunk(int x, int z)
 //==========================================
 double ProceduralTerrain::lerp(float a0, float a1, float w)
 {
-    return (1.0 - w) * a0 + a1;
+    float ft = w * 3.14159265;
+    float f  = (1-cos(ft)) * 0.5;
+    return a0 * (1-f) + a1 * f;
+    //return (1.0 - w) * a0 + a1;
 }
-/*
-double ProceduralTerrain::dotGridGradient(int ix, int iy, float x, float y)
-{
-    float dx = x - (float)ix;
-    float dy = y - (float)iy;
-    float Gradient0 = Noise(ix,iy);
-    //printf("%f\n",Gradient0);
-    float Gradient1 = //(((rand() % 2) * 2.0) - 1.0) *
-            sqrt(1 - Gradient0 * Gradient0);
-    return dx * Gradient0 + dy * Gradient1;
-}
-double ProceduralTerrain::PL_New(float x, float y)
-{
-    // Determine grid cell coordinates
-    int x0 = (x > 0 ? (int)x : (int)x - 1);
-    int x1 = x0 + 1;
-    int y0 = (y > 0 ? (int)y : (int)y - 1);
-    int y1 = y0 + 1;
-
-    // Determine interpolation weights
-    // Could also use higher order polynomial/s-curve here
-    float sx = x - (float)x0;
-    float sy = y - (float)y0;
-
-    // Interpolate between grid point gradients
-    float n0, n1, ix0, ix1, value;
-    n0 = dotGridGradient(x0, y0, 1.0 * x, 1.0 *y);
-    n1 = dotGridGradient(x1, y0, 1.0 * x, 1.0 *y);
-    ix0 = lerp(n0, n1, sx);
-    n0 = dotGridGradient(x0, y1, 1.0 * x, 1.0 *y);
-    n1 = dotGridGradient(x1, y1, 1.0 * x, 1.0 *y);
-    ix1 = lerp(n0, n1, sx);
-    value = lerp(ix0, ix1, sy);
-    return (value + 1) * 32;
-}
-*/

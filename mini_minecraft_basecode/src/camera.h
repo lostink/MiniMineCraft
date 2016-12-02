@@ -39,4 +39,7 @@ public:
     void TranslateAlongLook(float amt);
     void TranslateAlongRight(float amt);
     void TranslateAlongUp(float amt);
+    //
+    void NoYTranslateAlongLook(float amt);
+    void YTranslate(float amt);
 };
