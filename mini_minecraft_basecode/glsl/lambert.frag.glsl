@@ -70,6 +70,7 @@ void main()
 
         //Compute final shaded color
         out_Col = vec4(diffuseColor.rgb * lightIntensity, diffuseColor.a);
+        //======Below for debug purpose, can delete later======//
         //out_Col = texture(textureSampler,fs_uv);
         //out_Col = normalmapColor;
         //out_Col = finalNormal;

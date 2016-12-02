@@ -32,14 +32,6 @@ void Chunk::createChunk(std::map<std::tuple<int, int, int>,blocktype> &blockInfo
     }
 
 
-    /*for(unsigned int index=0; index<blockInfo.size(); index++){
-        int i = std::get<0>(blockInfo[index]); //i
-        int j = std::get<1>(blockInfo[index]); //j
-        int k = std::get<2>(blockInfo[index]); //k
-        blocks[i][j][k].setBlockActive(true);
-    }*/
-
-
     //Start from startPos, check if the map key exists
     int startX = std::get<0>(startPos);
     int startY = std::get<1>(startPos);
@@ -67,44 +59,44 @@ void getBlockFaceUV(blocktype btype, facetype ftype, std::vector<glm::vec2>& uv)
     case dirt:
        // Add your code here
         if(ftype == side){
-            uv.push_back(glm::vec2(3.0/16,0));
             uv.push_back(glm::vec2(2.0/16,0));
-            uv.push_back(glm::vec2(2.0/16,1.0/16));
+            uv.push_back(glm::vec2(3.0/16,0));
             uv.push_back(glm::vec2(3.0/16,1.0/16));
+            uv.push_back(glm::vec2(2.0/16,1.0/16));
         }
         if(ftype == top){
-            uv.push_back(glm::vec2(3.0/16,0));
             uv.push_back(glm::vec2(2.0/16,0));
-            uv.push_back(glm::vec2(2.0/16,1.0/16));
+            uv.push_back(glm::vec2(3.0/16,0));
             uv.push_back(glm::vec2(3.0/16,1.0/16));
+            uv.push_back(glm::vec2(2.0/16,1.0/16));
         }
         if(ftype == bottom){
-            uv.push_back(glm::vec2(3.0/16,0));
             uv.push_back(glm::vec2(2.0/16,0));
-            uv.push_back(glm::vec2(2.0/16,1.0/16));
+            uv.push_back(glm::vec2(3.0/16,0));
             uv.push_back(glm::vec2(3.0/16,1.0/16));
+            uv.push_back(glm::vec2(2.0/16,1.0/16));
 
         }
         break;
     case grass:
        // Add code here
         if(ftype == side){
-            uv.push_back(glm::vec2(4.0/16,0));
             uv.push_back(glm::vec2(3.0/16,0));
-            uv.push_back(glm::vec2(3.0/16,1.0/16));
+            uv.push_back(glm::vec2(4.0/16,0));
             uv.push_back(glm::vec2(4.0/16,1.0/16));
+            uv.push_back(glm::vec2(3.0/16,1.0/16));
         }
         if(ftype == top){
-            uv.push_back(glm::vec2(9.0/16,2.0/16));
             uv.push_back(glm::vec2(8.0/16,2.0/16));
-            uv.push_back(glm::vec2(8.0/16,3.0/16));
+            uv.push_back(glm::vec2(9.0/16,2.0/16));
             uv.push_back(glm::vec2(9.0/16,3.0/16));
+            uv.push_back(glm::vec2(8.0/16,3.0/16));
         }
         if(ftype == bottom){
-            uv.push_back(glm::vec2(3.0/16,0));
             uv.push_back(glm::vec2(2.0/16,0));
-            uv.push_back(glm::vec2(2.0/16,1.0/16));
+            uv.push_back(glm::vec2(3.0/16,0));
             uv.push_back(glm::vec2(3.0/16,1.0/16));
+            uv.push_back(glm::vec2(2.0/16,1.0/16));
 
         }
         break;
@@ -173,8 +165,8 @@ void getBlockFaceType(blocktype btype, std::vector<float>& blockType){
 }
 
 void createCubeVertAttribute(std::vector<glm::vec4>& pos,std::vector<glm::vec4>& nor,std::vector<glm::vec4>& col,
-                        int i, int j, int k,bool negativeX, bool positiveX,
-                        bool negativeY, bool positiveY, bool negativeZ, bool positiveZ, std::vector<glm::vec2>& uv,
+                        int i, int j, int k,bool negativeX, bool positiveX, bool negativeY, bool positiveY,
+                             bool negativeZ, bool positiveZ, std::vector<glm::vec2>& uv,
                              blocktype btype, std::vector<float>& shiness, std::vector<float>& blockType){
     //Do not render left face if negativeX is true
     if(!negativeX){

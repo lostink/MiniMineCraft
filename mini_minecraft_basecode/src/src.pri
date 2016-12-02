@@ -15,6 +15,7 @@ SOURCES += \
     $$PWD/scene/cube.cpp \
     $$PWD/scene/scene.cpp \
     $$PWD/scene/transform.cpp \
+    $$PWD/scene/screencenter.cpp \
     $$PWD/scene/chunk.cpp \
     $$PWD/scene/block.cpp \
     $$PWD/scene/chunkmanager.cpp \
@@ -34,6 +35,7 @@ HEADERS += \
     $$PWD/scene/cube.h \
     $$PWD/scene/scene.h \
     $$PWD/scene/transform.h \
+    $$PWD/scene/screencenter.h \
     $$PWD/scene/chunk.h \
     $$PWD/scene/block.h \
     $$PWD/scene/chunkmanager.h \

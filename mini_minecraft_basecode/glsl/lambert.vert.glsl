@@ -50,9 +50,7 @@ void main()
 
     //Yuxin MM02
     //Animate the uv if the block is water or lava
-    //fs_Col = vec4(vs_blockType,0,0,1);
     if(abs(vs_blockType-3)<0.0001){
-        //fs_Col = vec4(vs_blockType,0,0,1);
         //u_Time must be multiples of 16
         int time = u_Time%16;
         float movement = time*1.0/128;
@@ -71,6 +69,9 @@ void main()
 
     //Yuxin MM02
     vec3 vs_tangent = cross(vec3(0,1,0),vec3(vs_Nor));
+    if(length(vs_tangent)<0.0001){
+         vs_tangent = vec3(-1,0,0);
+    }
     normalize(vs_tangent);
     fs_tangent = vec4(invTranspose * vs_tangent, 0);
 

@@ -16,6 +16,7 @@
 #include <character.h>
 #include <tuple>
 #include <map>
+#include <scene/screencenter.h>
 using std::tuple;
 using std::map;
 //tester code end
@@ -24,11 +25,9 @@ class MyGL
     : public GLWidget277
 {
 private:
-    //Cube geom_cube;// The instance of a unit cube we can use to render any cube. Should NOT be used in final version of your project.
-    //===============Added By Yuxin===============//
-    //Chunk chunk;
+    Cube geom_cube;// The instance of a unit cube we can use to render any cube. Should NOT be used in final version of your project.
+    screenCenter geom_Center;
     ChunkManager chunkManager;
-    //===============Added By Yuxin===============//
     ShaderProgram prog_lambert;// A shader program that uses lambertian reflection
     ShaderProgram prog_flat;// A shader program that uses "flat" reflection (no shadowing at all)
     int timeCount; //Testing for update chunks
@@ -45,8 +44,7 @@ private:
     QTimer timer;
     //Code from lostink for testing character
     character Tester;
-    map<tuple<int,int,int>,int> test;
-
+    bool ShowMouse;
 //tester code end
 public:
     explicit MyGL(QWidget *parent = 0);
@@ -65,10 +63,26 @@ public:
     void updateChunkVisibility();
     void deleteBlock(int x, int y, int z);
     void addBlock(int x, int y, int z);
-
+    void NewChunk();
 protected:
     void keyPressEvent(QKeyEvent *e);
-
+    //Lostink insert code
+    bool flag_moving_forward;
+    bool flag_moving_backward;
+    bool flag_moving_right;
+    bool flag_moving_left;
+    bool flag_moving_up;      //Test mode only
+    bool flag_moving_down;    //Test mode only
+    bool flag_rotate_right;
+    bool flag_rotate_left;
+    bool flag_rotate_up;
+    bool flag_rotate_down;
+    float flag_amount_speed;
+    void keyReleaseEvent(QKeyEvent *e);
+    void mousePressEvent(QMouseEvent *e);
+    void mouseMoveEvent(QMouseEvent *e);
+    void Moving();
+    //Insert End.
 private slots:
     /// Slot that gets called ~60 times per second
     virtual void timerUpdate();

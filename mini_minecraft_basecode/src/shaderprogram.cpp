@@ -1,6 +1,8 @@
 #include "shaderprogram.h"
 #include <QFile>
 #include <QStringBuilder>
+#include <QDir>
+#include <iostream>
 
 
 
@@ -291,6 +293,7 @@ void ShaderProgram::printLinkInfoLog(int prog)
     }
 }
 
+//Yuxin MM02
 void ShaderProgram::bindTexture0()
 {
     context->glActiveTexture(GL_TEXTURE0);
@@ -307,11 +310,16 @@ void ShaderProgram::setUpTexture(){
 
     //Read in texture image
     int width, height;
-
-    unsigned char* image = SOIL_load_image("D:/MasterCourses/CIS560ComputerGraphics/HW/FinalProject"
-                                           "/repos/saltyfishesminecraft/mini_minecraft_basecode/"
-                                           "minecraft_textures_all.png",
-                                           &width, &height, 0, SOIL_LOAD_RGB);
+    QDir currentDir = QDir::current();
+    currentDir.cdUp();
+    currentDir.cd("mini_minecraft_basecode/texturemap");
+    //std::cout<<"currentDir is: "<<currentDir.path().toStdString()<<std::endl;
+    QString textureFile = currentDir.path()+"/minecraft_textures_all.png";
+    //std::cout<<"textureFile is: "<<textureFile.toStdString()<<std::endl;
+    QByteArray inBytes;
+    inBytes = textureFile.toUtf8();
+    const char* fileName = inBytes.constData();
+    unsigned char* image = SOIL_load_image(fileName,&width, &height, 0, SOIL_LOAD_RGB);
     printf("SOIL texture loading results: '%s'\n", SOIL_last_result());
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE,image);
@@ -325,11 +333,13 @@ void ShaderProgram::setUpTexture(){
 
 }
 
+//Yuxin MM02
 void ShaderProgram::bindNormalMap0(){
     context->glActiveTexture(GL_TEXTURE1);
     context->glBindTexture(GL_TEXTURE_2D,normalmapHandler);
 }
 
+//Yuxin MM02
 void ShaderProgram::setUpNormalMap(){
     useMe();
 
@@ -339,11 +349,17 @@ void ShaderProgram::setUpNormalMap(){
 
     //Read in normap map image
     int width, height;
-    unsigned char* image = SOIL_load_image("D:/MasterCourses/CIS560ComputerGraphics/HW/FinalProject"
-                                           "/repos/saltyfishesminecraft/mini_minecraft_basecode/"
-                                           "minecraft_normals_all.png",
-                                           &width, &height, 0, SOIL_LOAD_RGB);
 
+    QDir currentDir = QDir::current();
+    currentDir.cdUp();
+    currentDir.cd("mini_minecraft_basecode/texturemap");
+    //std::cout<<"currentDir is: "<<currentDir.path().toStdString()<<std::endl;
+    QString textureFile = currentDir.path()+"/minecraft_normals_all.png";
+    //std::cout<<"textureFile is: "<<textureFile.toStdString()<<std::endl;
+    QByteArray inBytes;
+    inBytes = textureFile.toUtf8();
+    const char* fileName = inBytes.constData();
+    unsigned char* image = SOIL_load_image(fileName,&width, &height, 0, SOIL_LOAD_RGB);
     printf("SOIL normal loading results: '%s'\n", SOIL_last_result());
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE,image);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);

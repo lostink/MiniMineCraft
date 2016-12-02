@@ -73,7 +73,6 @@ void ChunkManager::addBlockAt(int x, int y, int z){
             }
         }
     }
-
     glm::vec4 startPos = targetChunk->getStartPos();
     targetChunk->addBlockAt(x-startPos[0],y-startPos[1], z-startPos[2]);
     updatedChunks.push_back(targetChunk);
@@ -82,7 +81,11 @@ void ChunkManager::addBlockAt(int x, int y, int z){
 void ChunkManager::checkVisibility(glm::vec3 playerPos){
     //Chunks that are 32 (16*32 = 512 blocks) chunks away in XZ plane from player position should not be rendered
     for(unsigned int i=0; i<chunkLists.size(); i++){
+        /*std::cout<<"checkVisibility! "<<abs(chunkLists[i]->getStartPos()[0] - playerPos[0])+
+                abs(chunkLists[i]->getStartPos()[2] - playerPos[2])
+                <<std::endl;*/
         if(abs(chunkLists[i]->getStartPos()[0] - playerPos[0])+ abs(chunkLists[i]->getStartPos()[2] - playerPos[2]) >= 512){
+            //std::cout<<"not visible!"<<std::endl;
             chunkLists[i]->setChunkVisible(false);
         }
     }
