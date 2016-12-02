@@ -5,7 +5,7 @@
 #include <cmath>
 
 using namespace std;
-enum blocktype{dirt = 0, grass = 1, lava = 2};
+enum blocktype{dirt = 0, grass = 1, lava = 2, WATER = 3};
 
 class ProceduralTerrain
 {

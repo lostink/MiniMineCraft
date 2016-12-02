@@ -70,7 +70,7 @@ void ProceduralTerrain::createInitialWorld()
             for(int i = 0; i <= y; ++i)
             {
                 tuple<int, int, int> position(x, i, z);
-                mapWorld.insert(pair<tuple<int, int, int>, blocktype>(position, dirt));
+                mapWorld.insert(pair<tuple<int, int, int>, blocktype>(position, WATER));
             }
             //printf("%d,%d,%d\n", x, y, z);
         }
@@ -93,7 +93,7 @@ bool ProceduralTerrain::searchBlockAt(int x, int y, int z)
 void ProceduralTerrain::addBlockAt(int x, int y, int z)
 {
     tuple<int, int, int> position(x, y, z);
-    mapWorld.insert(pair<tuple<int, int, int>, blocktype>(position, dirt));
+    mapWorld.insert(pair<tuple<int, int, int>, blocktype>(position, WATER));
 }
 
 // Delete a block at a specific position
@@ -118,7 +118,7 @@ void ProceduralTerrain::addNewChunk(int x, int z)
             for(int k = 0; k <= y; ++k)
             {
                 tuple<int, int, int> position(x, k, z);
-                mapWorld.insert(pair<tuple<int, int, int>, blocktype>(position, dirt));
+                mapWorld.insert(pair<tuple<int, int, int>, blocktype>(position, WATER));
             }
         }
 

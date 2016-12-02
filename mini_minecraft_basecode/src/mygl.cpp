@@ -102,6 +102,10 @@ void MyGL::initializeGL()
     // This makes your geometry render green.
     prog_lambert.setGeometryColor(glm::vec4(0,1,0,1));
 
+    //Yuxin MM02
+    prog_lambert.setUpTexture();
+    prog_lambert.setUpNormalMap();
+
     // We have to have a VAO bound in OpenGL 3.2 Core. But if we're not
     // using multiple VAOs, we can just bind one once.
 //    vao.bind();
@@ -146,7 +150,7 @@ void MyGL::updateChunkVBO(){
 //===========================Added By Yuxin===============================//
 void MyGL::updateChunkVisibility(){
     //get the player position, if the player is at the edge of the chunk
-    if(int(round(Tester.eye[0]))%16==0 && int(round(Tester.eye[1]))%16==0 && int(round(Tester.eye[2]))%16==0){
+    if(int(round(Tester.eye[0]))%16==0 || int(round(Tester.eye[2]))%16==0){
         chunkManager.checkVisibility(Tester.eye);
     }
     //pass the player position to the chunkManager
@@ -183,6 +187,8 @@ void MyGL::paintGL()
     prog_lambert.setViewProjMatrix(gl_camera.getViewProj());
 
     //GLDrawScene();
+    prog_lambert.bindTexture0();
+    prog_lambert.bindNormalMap0();
     GLRenderWorld();
 }
 
@@ -294,17 +300,15 @@ void MyGL::addBlock(int x, int y, int z){
 
 void MyGL::timerUpdate()
 {
-
-    /*timeCount++;
-    //Delete a block every 60 timeCounts
-    int pos = 0;
-    if(timeCount%60==0){
-        std::cout<<"delete time count is: "<<timeCount<<std::endl;
-        pos = timeCount/60;
-        deleteBlock(pos, 0, 0);
-        //addBlock(pos,0,0);
+    timeCount++;
+    //pass this value to fragement shader to make water and lava shader moving
+    if(timeCount==128){
+        timeCount = 0;
     }
-    update();*/
+    if(timeCount%8==0){
+        prog_lambert.setTimeCount(timeCount/8);
+        update();
+    }
 
     //Test code from Lostink
     //Testing physical system

@@ -43,9 +43,10 @@ private:
 
     /// Timer linked to timerUpdate(). Fires approx. 60 times per second
     QTimer timer;
-//Code from lostink for testing character
+    //Code from lostink for testing character
     character Tester;
     map<tuple<int,int,int>,int> test;
+
 //tester code end
 public:
     explicit MyGL(QWidget *parent = 0);
