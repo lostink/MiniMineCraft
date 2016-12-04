@@ -44,6 +44,7 @@ MyGL::MyGL(QWidget *parent)
     Tester.SetMesh(&terrain.mapWorld);
     Tester.SetManager(&chunkManager);
     Tester.SetTerrain(&terrain);
+
 }
 
 MyGL::~MyGL()
