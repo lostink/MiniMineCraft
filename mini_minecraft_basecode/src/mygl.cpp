@@ -33,7 +33,7 @@ MyGL::MyGL(QWidget *parent)
 
     std::tuple<int, int, int> startPos(0,0,0);
     for(int x=0; x<4; x++){
-        for(int y=0; y<4; y++){
+        for(int y=-8; y<4; y++){
             for(int z=0; z<4; z++){
                 startPos = std::tuple<int, int, int>(x*16,y*16,z*16);
                 createNewChunk(terrain.mapWorld,startPos);
@@ -44,13 +44,6 @@ MyGL::MyGL(QWidget *parent)
     Tester.SetMesh(&terrain.mapWorld);
     Tester.SetManager(&chunkManager);
     Tester.SetTerrain(&terrain);
-
-    for(int i = 0; i < 10; ++i)
-        for(int j = 0; j < 10; ++j)
-            for(int k = 0; k < 10; ++k)
-            {
-                cout<< terrain.PerlinNoise_3D_xz(i, j, k) << " " << terrain.PerlinNoise_3D_y(i, j, k)<<endl;
-            }
 
 }
 
@@ -98,6 +91,10 @@ void MyGL::initializeGL()
     // This makes your geometry render green.
     prog_lambert.setGeometryColor(glm::vec4(0,1,0,1));
 
+    //Yuxin MM02
+    prog_lambert.setUpTexture();
+    prog_lambert.setUpNormalMap();
+
     // We have to have a VAO bound in OpenGL 3.2 Core. But if we're not
     // using multiple VAOs, we can just bind one once.
 //    vao.bind();
@@ -141,13 +138,9 @@ void MyGL::updateChunkVBO(){
 //===========================Added By Yuxin===============================//
 void MyGL::updateChunkVisibility(){
     //get the player position, if the player is at the edge of the chunk
-    //std::cout<<"updateChunkVisibility() "<<glm::to_string(Tester.eye)<<std::endl;
-    //std::cout<<"x is: "<<int(round(Tester.eye[0]))%16<<std::endl;
     if(int(round(Tester.eye[0]))%16==0 || int(round(Tester.eye[2]))%16==0){
-        //std::cout<<"check visibility here"<<std::endl;
         chunkManager.checkVisibility(Tester.eye);
     }
-    //pass the player position to the chunkManager
 }
 
 //===========================Added By Yuxin===============================//
@@ -179,6 +172,10 @@ void MyGL::paintGL()
     prog_flat.setViewProjMatrix(gl_camera.getViewProj());
     prog_lambert.setViewProjMatrix(gl_camera.getViewProj());
 
+    //GLDrawScene();
+    //YuxinMM02 activate the Texture and Normal map before rendering world scene
+    prog_lambert.bindTexture0();
+    prog_lambert.bindNormalMap0();
     GLRenderWorld();
     prog_flat.setModelMatrix(glm::mat4(1.0));
     prog_flat.setViewProjMatrix(glm::mat4(1.0));
@@ -285,9 +282,12 @@ void MyGL::keyPressEvent(QKeyEvent *e)
 //        NewChunk();
         flag_moving_left = 1;
     } else if (e->key() == Qt::Key_Q) {
-
+        if (Tester.DisableFlyingAndCollision == 1)
+            flag_moving_down = 1;
     } else if (e->key() == Qt::Key_E) {
 //        gl_camera.TranslateAlongUp(amount);
+        if (Tester.DisableFlyingAndCollision == 1)
+            flag_moving_up = 1;
     } else if (e->key() == Qt::Key_R) {
 //        gl_camera = Camera(this->width(), this->height());
     } else if (e->key() == Qt::Key_Space){
@@ -295,6 +295,9 @@ void MyGL::keyPressEvent(QKeyEvent *e)
     }else if (e->key() == Qt::Key_F3)
     {
         ShowMouse^=1;
+    }else if (e->key() == Qt::Key_F)
+    {
+        Tester.ChangeFlyingAndCollision();
     }
     //tst end
     gl_camera.RecomputeAttributes();
@@ -319,6 +322,10 @@ void MyGL::keyReleaseEvent(QKeyEvent *e)
         flag_rotate_up = 0;
     } else if (e->key() == Qt::Key_Down) {
         flag_rotate_down = 0;
+    } else if (e->key() == Qt::Key_Q){
+        flag_moving_down = 0;
+    } else if (e->key() == Qt::Key_E){
+        flag_moving_up = 0;
     }
 }
 void MyGL::mousePressEvent(QMouseEvent *e)
@@ -371,6 +378,16 @@ void MyGL::Moving(){
         Tester.CheckTranslateAlongRight(flag_amount_speed);
         NewChunk();
     }
+    if (flag_moving_down && flag_moving_up)
+    {}
+    else if (flag_moving_down)
+    {
+        Tester.CheckTranslateAlongUp(-flag_amount_speed);
+    }
+    else if (flag_moving_up)
+    {
+        Tester.CheckTranslateAlongUp(flag_amount_speed);
+    }
 }
 //Insert End.
 void MyGL::deleteBlock(int x, int y, int z){
@@ -382,9 +399,18 @@ void MyGL::addBlock(int x, int y, int z){
 }
 void MyGL::timerUpdate()
 {
-        Tester.Falling();
+    timeCount++;
+    //pass this value to fragement shader to make water and lava shader moving
+    if(timeCount==128){
+        timeCount = 0;
+    }
+    if(timeCount%8==0){
+        prog_lambert.setTimeCount(timeCount/8);
         update();
-        Moving();
+    }
+    Tester.Falling();
+    update();
+    Moving();
 }
 void MyGL::NewChunk(){
     vector<tuple<int,int,int>>* NC= Tester.GetNewBlockVec();

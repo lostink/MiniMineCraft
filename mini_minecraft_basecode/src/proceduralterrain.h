@@ -8,6 +8,8 @@
 using namespace std;
 enum blocktype{DIRT = 0, GRASS = 1, LAVA = 2, STONE = 3, WOOD = 4, LEAF = 5, BEDROCK = 6, COAL = 7, IRONORE = 8, WATER = 9};
 
+
+
 class ProceduralTerrain
 {
 public:

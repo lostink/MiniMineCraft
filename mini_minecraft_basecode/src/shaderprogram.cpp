@@ -1,13 +1,16 @@
 #include "shaderprogram.h"
 #include <QFile>
 #include <QStringBuilder>
+#include <QDir>
+#include <iostream>
+
 
 
 ShaderProgram::ShaderProgram(GLWidget277 *context)
-    : vertShader(), fragShader(), prog(),
+    : vertShader(), fragShader(), prog(),textureHandler(),
       attrPos(-1), attrNor(-1), attrCol(-1),
-      unifModel(-1), unifModelInvTr(-1), unifViewProj(-1), unifColor(-1),
-      context(context)
+      unifModel(-1), unifModelInvTr(-1), unifViewProj(-1), unifColor(-1),unifSampler(-1),attrUv(-1),unifNormal(-1),
+      unifTime(-1),attrBlockType(-1),context(context)
 {}
 
 void ShaderProgram::create(const char *vertfile, const char *fragfile)
@@ -62,10 +65,19 @@ void ShaderProgram::create(const char *vertfile, const char *fragfile)
     attrNor = context->glGetAttribLocation(prog, "vs_Nor");
     attrCol = context->glGetAttribLocation(prog, "vs_Col");
 
+    //Yuxin MM02
+    attrUv = context->glGetAttribLocation(prog, "vs_uv");
+    attrBlockType = context->glGetAttribLocation(prog, "vs_blockType");
+
     unifModel      = context->glGetUniformLocation(prog, "u_Model");
     unifModelInvTr = context->glGetUniformLocation(prog, "u_ModelInvTr");
     unifViewProj   = context->glGetUniformLocation(prog, "u_ViewProj");
     unifColor      = context->glGetUniformLocation(prog, "u_Color");
+
+    //Yuxin MM02
+    unifSampler = context->glGetUniformLocation(prog, "textureSampler");
+    unifNormal = context->glGetUniformLocation(prog, "normalSampler");
+    unifTime = context->glGetUniformLocation(prog, "u_Time");
 }
 
 void ShaderProgram::useMe()
@@ -131,6 +143,15 @@ void ShaderProgram::setGeometryColor(glm::vec4 color)
     }
 }
 
+void ShaderProgram::setTimeCount(int timeCount){
+    useMe();
+
+    if(unifTime != -1)
+    {
+        context->glUniform1i(unifTime,timeCount);
+    }
+}
+
 //This function, as its name implies, uses the passed in GL widget
 void ShaderProgram::draw(Drawable &d)
 {
@@ -163,15 +184,23 @@ void ShaderProgram::draw(Drawable &d)
     //===================Added by Yuxin======================//
     if(attrPos != -1 && d.bindChunk()){
         context->glEnableVertexAttribArray(attrPos);
-        context->glVertexAttribPointer(attrPos,4,GL_FLOAT,false,3*sizeof(glm::vec4),(void*)0);
+        context->glVertexAttribPointer(attrPos,4,GL_FLOAT,false,6*sizeof(glm::vec4),(void*)0);
     }
     if(attrNor != -1 && d.bindChunk()){
         context->glEnableVertexAttribArray(attrNor);
-        context->glVertexAttribPointer(attrNor,4,GL_FLOAT,false,3*sizeof(glm::vec4),(void*)(sizeof(glm::vec4)));
+        context->glVertexAttribPointer(attrNor,4,GL_FLOAT,false,6*sizeof(glm::vec4),(void*)(sizeof(glm::vec4)));
     }
     if(attrCol !=-1 && d.bindChunk()){
         context->glEnableVertexAttribArray(attrCol);
-        context->glVertexAttribPointer(attrCol,4,GL_FLOAT,false,3*sizeof(glm::vec4),(void*)(sizeof(glm::vec4)*2));
+        context->glVertexAttribPointer(attrCol,4,GL_FLOAT,false,6*sizeof(glm::vec4),(void*)(sizeof(glm::vec4)*2));
+    }
+    if(attrUv !=-1 && d.bindChunk()){
+        context->glEnableVertexAttribArray(attrUv);
+        context->glVertexAttribPointer(attrUv,2,GL_FLOAT,false,6*sizeof(glm::vec4),(void*)(sizeof(glm::vec4)*3));
+    }
+    if(attrBlockType!=-1 && d.bindChunk()){
+        context->glEnableVertexAttribArray(attrBlockType);
+        context->glVertexAttribPointer(attrBlockType,1,GL_FLOAT,false,6*sizeof(glm::vec4), (void*)(sizeof(glm::vec4)*4));
     }
 
     // Bind the index buffer and then draw shapes from it.
@@ -182,6 +211,8 @@ void ShaderProgram::draw(Drawable &d)
     if (attrPos != -1) context->glDisableVertexAttribArray(attrPos);
     if (attrNor != -1) context->glDisableVertexAttribArray(attrNor);
     if (attrCol != -1) context->glDisableVertexAttribArray(attrCol);
+    if (attrUv != -1) context->glDisableVertexAttribArray(attrUv);
+    if(attrBlockType !=-1) context->glDisableVertexAttribArray(attrBlockType);
 
     context->printGLErrorLog();
 }
@@ -259,5 +290,81 @@ void ShaderProgram::printLinkInfoLog(int prog)
         context->glGetProgramInfoLog(prog, infoLogLen, &charsWritten, infoLog);
         qDebug() << "LinkInfoLog:" << endl << infoLog << endl;
         delete [] infoLog;
+    }
+}
+
+//Yuxin MM02
+void ShaderProgram::bindTexture0()
+{
+    context->glActiveTexture(GL_TEXTURE0);
+    context->glBindTexture(GL_TEXTURE_2D,textureHandler);
+}
+
+//Yuxin MM02
+void ShaderProgram::setUpTexture(){
+    useMe();
+
+    context->glGenTextures(1, &textureHandler);
+    context->glActiveTexture(GL_TEXTURE0);
+    context->glBindTexture(GL_TEXTURE_2D,textureHandler);
+
+    //Read in texture image
+    int width, height;
+    QDir currentDir = QDir::current();
+    currentDir.cdUp();
+    currentDir.cd("mini_minecraft_basecode/texturemap");
+    //std::cout<<"currentDir is: "<<currentDir.path().toStdString()<<std::endl;
+    QString textureFile = currentDir.path()+"/minecraft_textures_all.png";
+    //std::cout<<"textureFile is: "<<textureFile.toStdString()<<std::endl;
+    QByteArray inBytes;
+    inBytes = textureFile.toUtf8();
+    const char* fileName = inBytes.constData();
+    unsigned char* image = SOIL_load_image(fileName,&width, &height, 0, SOIL_LOAD_RGB);
+    printf("SOIL texture loading results: '%s'\n", SOIL_last_result());
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE,image);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    if(unifSampler!=-1){
+        context->glUniform1i(unifSampler, 0);
+    }
+
+}
+
+//Yuxin MM02
+void ShaderProgram::bindNormalMap0(){
+    context->glActiveTexture(GL_TEXTURE1);
+    context->glBindTexture(GL_TEXTURE_2D,normalmapHandler);
+}
+
+//Yuxin MM02
+void ShaderProgram::setUpNormalMap(){
+    useMe();
+
+    context->glGenTextures(1, &normalmapHandler);
+    context->glActiveTexture(GL_TEXTURE1);
+    context->glBindTexture(GL_TEXTURE_2D,normalmapHandler);
+
+    //Read in normap map image
+    int width, height;
+
+    QDir currentDir = QDir::current();
+    currentDir.cdUp();
+    currentDir.cd("mini_minecraft_basecode/texturemap");
+    //std::cout<<"currentDir is: "<<currentDir.path().toStdString()<<std::endl;
+    QString textureFile = currentDir.path()+"/minecraft_normals_all.png";
+    //std::cout<<"textureFile is: "<<textureFile.toStdString()<<std::endl;
+    QByteArray inBytes;
+    inBytes = textureFile.toUtf8();
+    const char* fileName = inBytes.constData();
+    unsigned char* image = SOIL_load_image(fileName,&width, &height, 0, SOIL_LOAD_RGB);
+    printf("SOIL normal loading results: '%s'\n", SOIL_last_result());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE,image);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    if(unifNormal!=-1){
+        context->glUniform1i(unifNormal, 1);
     }
 }

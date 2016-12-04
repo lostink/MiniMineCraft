@@ -42,7 +42,7 @@ private:
 
     /// Timer linked to timerUpdate(). Fires approx. 60 times per second
     QTimer timer;
-//Code from lostink for testing character
+    //Code from lostink for testing character
     character Tester;
     bool ShowMouse;
 //tester code end
@@ -71,6 +71,8 @@ protected:
     bool flag_moving_backward;
     bool flag_moving_right;
     bool flag_moving_left;
+    bool flag_moving_up;      //Test mode only
+    bool flag_moving_down;    //Test mode only
     bool flag_rotate_right;
     bool flag_rotate_left;
     bool flag_rotate_up;

@@ -19,6 +19,7 @@ public:
     float velocity_down;//using to calculate velocity
     blocktype holding_type;//TODO:use enum to replace this.
     float upAngle;//Used to make constraint
+    bool DisableFlyingAndCollision;
     vector<tuple<int,int,int>> NewBlockVec;
 
     character();
@@ -33,7 +34,6 @@ public:
     void CheckTranslateAlongLook(float amt);
     void CheckTranslateAlongRight(float amt);
     void CheckTranslateAlongUp(float amt);
-
     vector<tuple<int,int,int>>* GetNewBlockVec();
 
     void CheckRotateAboutUp(float deg);
@@ -43,7 +43,7 @@ public:
     //velocity on z axis less    than zero : jumping up
     void Jump();   //set velocity on z axis to
     void Falling();//This part notonly
-
+    void ChangeFlyingAndCollision();
     //Raytracing part:
     void DeleteBlockLookAt();
     void AddBlockToLookAt();

@@ -243,34 +243,32 @@ float ProceduralTerrain::PerlinNoise_3D_y(float x, float y,float z)
 // Create the initial 64 * 192 * 64 World
 void ProceduralTerrain::createInitialWorld()
 {
-    // DIRT: y from 0 to 63
+    // DIRT: y from 0 to (ground surface - 1)
+    // GRASS: y = ground surface
+    // STONE: y from -127 to -1
+    // BEDROCK: y = -128
     int y;
     for(int x = 0; x < 64; ++x)
     {
         for(int z = 0; z < 64; ++z)
         {
             y = PerlinNoise_2D(1.0 * x,1.0 * z);
-            for(int i = 0; i <= y; ++i)
+            tuple<int, int, int> positiongrass(x, y, z);
+            mapWorld.insert(pair<tuple<int, int, int>, blocktype>(positiongrass, GRASS));
+            tuple<int, int, int> positionbedrock(x, -128, z);
+            mapWorld.insert(pair<tuple<int, int, int>, blocktype>(positionbedrock, BEDROCK));
+            for(int k = 0; k < y; ++k)
             {
-                tuple<int, int, int> position(x, i, z);
+                tuple<int, int, int> position(x, k, z);
                 mapWorld.insert(pair<tuple<int, int, int>, blocktype>(position, DIRT));
             }
-        }
-    }
-
-    // STONE: y from -127 to -1
-    // BEDROCK: y = -128
-    for(int i = 0; i < 64; ++i)
-        for(int j = 0; j < 64; ++j)
-        {
-            tuple<int, int, int> position(i, -128, j);
-            mapWorld.insert(pair<tuple<int, int, int>, blocktype>(position, BEDROCK));
             for(int k = -127; k < 0; ++k)
             {
-                tuple<int, int, int> position(i, k, j);
+                tuple<int, int, int> position(x, k, z);
                 mapWorld.insert(pair<tuple<int, int, int>, blocktype>(position, STONE));
             }
         }
+    }
     // Generate cave
     CaveGenerator();
 }
@@ -311,9 +309,18 @@ void ProceduralTerrain::addNewChunk(int x, int z)
         for(int j = 0; j < 16; ++j)
         {
             y = PerlinNoise_2D(1.0 * (x+i),1.0 * (z+j));
-            for(int k = 0; k <= y; ++k)
+            tuple<int, int, int> positiongrass(x + i, y, z + j);
+            mapWorld.insert(pair<tuple<int, int, int>, blocktype>(positiongrass, GRASS));
+            tuple<int, int, int> positionbedrock(x + i, -128, z + j);
+            mapWorld.insert(pair<tuple<int, int, int>, blocktype>(positionbedrock, BEDROCK));
+            for(int k = -127; k < 0; ++k)
             {
-                tuple<int, int, int> position(x +i , k, z + j);
+                tuple<int, int, int> position(x + i , k, z + j);
+                mapWorld.insert(pair<tuple<int, int, int>, blocktype>(position, STONE));
+            }
+            for(int k = 0; k < y; ++k)
+            {
+                tuple<int, int, int> position(x + i , k, z + j);
                 mapWorld.insert(pair<tuple<int, int, int>, blocktype>(position, DIRT));
             }
         }
@@ -324,12 +331,6 @@ void ProceduralTerrain::addNewChunk(int x, int z)
 #define CAVE_SIZE 15
 void ProceduralTerrain::CreateTunnel(int x, int y, int z, float radius)
 {
-    /*
-    tuple<int, int, int> pos(x, y, z);
-    map<tuple<int,int,int>,blocktype>::iterator flag_for_dig= mapWorld.find(pos);
-    if (flag_for_dig==mapWorld.end())//change to == when code is done
-        return;
-    */
     for(int i = -CAVE_SIZE; i <= CAVE_SIZE; ++i)
         for(int j = -CAVE_SIZE; j <= CAVE_SIZE; ++j)
             for(int k = -CAVE_SIZE; k <= CAVE_SIZE; ++k)
