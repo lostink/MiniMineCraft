@@ -34,7 +34,9 @@ public:
     int attrUv; //A handle for the "in" vec2 representing uv coordinates in the vertex shader
     int unifNormal; //A handle for the "uniform" normalSampler representing the normal map in fragment shader
     int unifTime; //A handle for the "uniform" int u_Time representing a timer which can alter color of fragments
-    int attrBlockType; //A handle for the "in" int representing the block uv animated type
+    int attrBlockType; //A handle for the "in" float representing the block uv animated type
+    int attrShiness; //A handle for the "in" float representing the block shiness
+    int unifEye; //A handle for the "uniform" vec4 representing the eye position in the world
 
 
 public:
@@ -66,6 +68,7 @@ public:
     void bindNormalMap0();
     void setUpNormalMap();
     void setTimeCount(int timeCount);
+    void setEyePosition(glm::vec3 eyePos);
 
 private:
     GLWidget277* context;   // Since Qt's OpenGL support is done through classes like QOpenGLFunctions_3_2_Core,

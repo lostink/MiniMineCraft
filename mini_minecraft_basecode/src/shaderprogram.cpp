@@ -10,7 +10,7 @@ ShaderProgram::ShaderProgram(GLWidget277 *context)
     : vertShader(), fragShader(), prog(),textureHandler(),
       attrPos(-1), attrNor(-1), attrCol(-1),
       unifModel(-1), unifModelInvTr(-1), unifViewProj(-1), unifColor(-1),unifSampler(-1),attrUv(-1),unifNormal(-1),
-      unifTime(-1),attrBlockType(-1),context(context)
+      unifTime(-1),attrBlockType(-1),attrShiness(-1),context(context)
 {}
 
 void ShaderProgram::create(const char *vertfile, const char *fragfile)
@@ -68,6 +68,7 @@ void ShaderProgram::create(const char *vertfile, const char *fragfile)
     //Yuxin MM02
     attrUv = context->glGetAttribLocation(prog, "vs_uv");
     attrBlockType = context->glGetAttribLocation(prog, "vs_blockType");
+    attrShiness = context->glGetAttribLocation(prog, "vs_shiness");
 
     unifModel      = context->glGetUniformLocation(prog, "u_Model");
     unifModelInvTr = context->glGetUniformLocation(prog, "u_ModelInvTr");
@@ -78,6 +79,7 @@ void ShaderProgram::create(const char *vertfile, const char *fragfile)
     unifSampler = context->glGetUniformLocation(prog, "textureSampler");
     unifNormal = context->glGetUniformLocation(prog, "normalSampler");
     unifTime = context->glGetUniformLocation(prog, "u_Time");
+    unifEye = context->glGetUniformLocation(prog, "eyePos");
 }
 
 void ShaderProgram::useMe()
@@ -152,6 +154,14 @@ void ShaderProgram::setTimeCount(int timeCount){
     }
 }
 
+void ShaderProgram::setEyePosition(glm::vec3 eyePos){
+    useMe();
+    if(unifEye!=-1)
+    {
+        context->glUniform3fv(unifEye,1,&eyePos[0]);
+    }
+}
+
 //This function, as its name implies, uses the passed in GL widget
 void ShaderProgram::draw(Drawable &d)
 {
@@ -202,6 +212,11 @@ void ShaderProgram::draw(Drawable &d)
         context->glEnableVertexAttribArray(attrBlockType);
         context->glVertexAttribPointer(attrBlockType,1,GL_FLOAT,false,6*sizeof(glm::vec4), (void*)(sizeof(glm::vec4)*4));
     }
+    if(attrShiness!=-1 && d.bindChunk()){
+        context->glEnableVertexAttribArray(attrShiness);
+        context->glVertexAttribPointer(attrShiness,1,GL_FLOAT,false,6*sizeof(glm::vec4), (void*)(sizeof(glm::vec4)*5));
+    }
+
 
     // Bind the index buffer and then draw shapes from it.
     // This invokes the shader program, which accesses the vertex buffers.
@@ -212,7 +227,8 @@ void ShaderProgram::draw(Drawable &d)
     if (attrNor != -1) context->glDisableVertexAttribArray(attrNor);
     if (attrCol != -1) context->glDisableVertexAttribArray(attrCol);
     if (attrUv != -1) context->glDisableVertexAttribArray(attrUv);
-    if(attrBlockType !=-1) context->glDisableVertexAttribArray(attrBlockType);
+    if (attrBlockType !=-1) context->glDisableVertexAttribArray(attrBlockType);
+    if( attrShiness != -1) context->glDisableVertexAttribArray(attrShiness);
 
     context->printGLErrorLog();
 }

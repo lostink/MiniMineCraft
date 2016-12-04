@@ -6,7 +6,7 @@
 #include <iostream>
 
 using namespace std;
-enum blocktype{dirt = 0, grass = 1, lava = 2, WATER = 3};
+enum blocktype{DIRT = 0, GRASS = 1, LAVA = 2, WATER = 3, WOOD = 4, LEAF = 5, STONE = 6, BEDROCK = 7, COAL = 8, IRONORE = 9, OTHER = 10};
 
 class ProceduralTerrain
 {
