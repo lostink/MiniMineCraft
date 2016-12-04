@@ -44,6 +44,14 @@ MyGL::MyGL(QWidget *parent)
     Tester.SetMesh(&terrain.mapWorld);
     Tester.SetManager(&chunkManager);
     Tester.SetTerrain(&terrain);
+
+    for(int i = 0; i < 10; ++i)
+        for(int j = 0; j < 10; ++j)
+            for(int k = 0; k < 10; ++k)
+            {
+                cout<< terrain.PerlinNoise_3D_xz(i, j, k) << " " << terrain.PerlinNoise_3D_y(i, j, k)<<endl;
+            }
+
 }
 
 MyGL::~MyGL()
