@@ -28,6 +28,8 @@ in vec4 fs_Col;
 in vec2 fs_uv;
 in vec4 fs_tangent;
 in vec4 fs_bitangent;
+in vec4 fs_view;
+in float fs_shiness;
 
 out vec4 out_Col; // This is the final output color that you will see on your
                   // screen for the pixel that is currently being processed.
@@ -55,18 +57,34 @@ void main()
         normalmapColor[2] = 2*normalmapColor[2]-1;
         normalmapColor[3] = 0;
         vec4 finalNormal = objTransform * normalmapColor;
-        float diffuseTerm = dot(normalize(finalNormal), normalize(fs_LightVec));
-
-        // Calculate the diffuse term for Lambert shading
-        //float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));
-        // Avoid negative lighting values
-        diffuseTerm = clamp(diffuseTerm, 0, 1);
 
         float ambientTerm = 0.2;
 
-        float lightIntensity = diffuseTerm + ambientTerm;   //Add a small float value to the color multiplier
+        //==========Blinn Phong Shading Model===========//
+        //max(pow(dot(H,N), shiness),0)
+        vec4 halfVector = 1.0/2 * (normalize(fs_view)+normalize(fs_LightVec));
+        float diffuseTerm = max(pow(dot(normalize(halfVector),normalize(finalNormal)),
+                                    fs_shiness),0);
+        diffuseTerm = clamp(diffuseTerm, 0, 1);
+        float lightIntensity = diffuseTerm + ambientTerm;
+
+        //==========Blinn Phong Shading Model===========//
+
+
+
+        //==========Lambert Shading Model============//
+        ///float diffuseTerm = dot(normalize(finalNormal), normalize(fs_LightVec));
+
+        // Calculate the diffuse term for Lambert shading
+        // Can delete later since we are using finalNormal calculated from normal map
+        // float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));
+        // Avoid negative lighting values
+        ///diffuseTerm = clamp(diffuseTerm, 0, 1);
+        ///float lightIntensity = diffuseTerm + ambientTerm;   //Add a small float value to the color multiplier
                                                             //to simulate ambient lighting. This ensures that faces that are not
                                                             //lit by our point light are not completely black.
+        //==========Lambert Shading Model=============//
+
 
         //Compute final shaded color
         out_Col = vec4(diffuseColor.rgb * lightIntensity, diffuseColor.a);

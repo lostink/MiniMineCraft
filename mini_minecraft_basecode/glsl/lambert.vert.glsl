@@ -20,6 +20,9 @@ uniform mat4 u_ViewProj;    // The matrix that defines the camera's transformati
                             // We've written a static matrix for you to use for HW2,
                             // but in HW3 you'll have to generate one yourself
 
+//Yuxin MM02
+uniform vec3 eyePos;        //player's position in the world
+
 in vec4 vs_Pos;             // The array of vertex positions passed to the shader
 
 in vec4 vs_Nor;             // The array of vertex normals passed to the shader
@@ -28,9 +31,9 @@ in vec4 vs_Col;             // The array of vertex colors passed to the shader.
 
 //Yuxin MM02
 uniform int u_Time;         //Used to animate the water and lava texture
-
 in vec2 vs_uv;              // The array of vertex uvs passed to the shader.
-in float vs_blockType;        // The block type indicating if the uv should be animated
+in float vs_blockType;      // The block type indicating if the uv should be animated
+in float vs_shiness;           // The shiness of the block
 
 out vec4 fs_Nor;            // The array of normals that has been transformed by u_ModelInvTr. This is implicitly passed to the fragment shader.
 out vec4 fs_LightVec;       // The direction in which our virtual light lies, relative to each vertex. This is implicitly passed to the fragment shader.
@@ -40,6 +43,9 @@ out vec4 fs_Col;            // The color of each vertex. This is implicitly pass
 out vec2 fs_uv;            //The uv of each vertex
 out vec4 fs_tangent;       //vertex local tangent vector
 out vec4 fs_bitangent;     //vertex local bitangent vector
+out vec4 fs_view;          //vector from eye to the vertex
+
+out float fs_shiness;
 
 const vec4 lightDir = vec4(1,1,1,0);  // The direction of our virtual light, which is used to compute the shading of
                                         // the geometry in the fragment shader.
@@ -75,7 +81,7 @@ void main()
     normalize(vs_tangent);
     fs_tangent = vec4(invTranspose * vs_tangent, 0);
 
-    vec3 vs_bitangent = cross(vec3(vs_Nor),vs_tangent);
+    vec3 vs_bitangent = cross(vs_tangent,vec3(vs_Nor));
     normalize(vs_bitangent);
     fs_bitangent = vec4(invTranspose * vs_bitangent, 0);
 
@@ -84,6 +90,10 @@ void main()
     vec4 modelposition = u_Model * vs_Pos;   // Temporarily store the transformed vertex positions for use below
 
     fs_LightVec = (lightDir);  // Compute the direction in which the light source lies
+
+    //YuxinMM02
+    fs_view = vec4(eyePos[0],eyePos[1],eyePos[2],1)-modelposition;
+    fs_shiness = vs_shiness;
 
     gl_Position = u_ViewProj * modelposition;// gl_Position is a built-in variable of OpenGL which is
                                              // used to render the final positions of the geometry's vertices

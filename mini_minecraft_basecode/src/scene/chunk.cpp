@@ -113,11 +113,48 @@ void getBlockFaceUV(blocktype btype, facetype ftype, std::vector<glm::vec2>& uv)
         uv.push_back(glm::vec2(14.0/16,13.0/16));
         uv.push_back(glm::vec2(13.0/16,13.0/16));
         break;
-    default:
-        uv.push_back(glm::vec2(0,0));
+    case WOOD:
+        uv.push_back(glm::vec2(4.0/16,1.0/16));
+        uv.push_back(glm::vec2(5.0/16,1.0/16));
+        uv.push_back(glm::vec2(5.0/16,2.0/16));
+        uv.push_back(glm::vec2(4.0/16,2.0/16));
+        break;
+    case LEAF:
+        uv.push_back(glm::vec2(5.0/16,3.0/16));
+        uv.push_back(glm::vec2(6.0/16,3.0/16));
+        uv.push_back(glm::vec2(6.0/16,4.0/16));
+        uv.push_back(glm::vec2(5.0/16,4.0/16));
+        break;
+    case STONE:
         uv.push_back(glm::vec2(1.0/16,0));
+        uv.push_back(glm::vec2(2.0/16,0));
+        uv.push_back(glm::vec2(2.0/16,1.0/16));
         uv.push_back(glm::vec2(1.0/16,1.0/16));
-        uv.push_back(glm::vec2(0,1.0/16));
+        break;
+    case BEDROCK:
+        uv.push_back(glm::vec2(1.0/16,1.0/16));
+        uv.push_back(glm::vec2(2.0/16,1.0/16));
+        uv.push_back(glm::vec2(2.0/16,2.0/16));
+        uv.push_back(glm::vec2(1.0/16,2.0/16));
+        break;
+    case COAL:
+        uv.push_back(glm::vec2(2.0/16,2.0/16));
+        uv.push_back(glm::vec2(3.0/16,2.0/16));
+        uv.push_back(glm::vec2(3.0/16,3.0/16));
+        uv.push_back(glm::vec2(2.0/16,3.0/16));
+        break;
+    case IRONORE:
+        uv.push_back(glm::vec2(1.0/16,2.0/16));
+        uv.push_back(glm::vec2(2.0/16,2.0/16));
+        uv.push_back(glm::vec2(2.0/16,3.0/16));
+        uv.push_back(glm::vec2(1.0/16,3.0/16));
+        break;
+    default:
+        uv.push_back(glm::vec2(0.0/16,0.0/16));
+        uv.push_back(glm::vec2(1.0/16,0.0/16));
+        uv.push_back(glm::vec2(1.0/16,1.0/16));
+        uv.push_back(glm::vec2(0.0/16,1.0/16));
+        break;
     }
 
 }
@@ -127,27 +164,59 @@ void getBlockFaceShiness(blocktype btype, std::vector<float>& shiness){
     {
     case DIRT:
         for(int i=0; i<4; i++){
-            shiness.push_back(0.3);
+            shiness.push_back(2);
         }
         break;
     case GRASS:
         for(int i=0; i<4; i++){
-            shiness.push_back(0.1);
+            shiness.push_back(1);
         }
         break;
     case LAVA:
         for(int i=0; i<4; i++){
-            shiness.push_back(0.5);
+            shiness.push_back(2);
         }
         break;
     case WATER:
         for(int i=0; i<4; i++){
-            shiness.push_back(0.4);
+            shiness.push_back(2);
         }
+        break;
+    case WOOD:
+        for(int i=0; i<4; i++){
+            shiness.push_back(4);
+        }
+        break;
+    case LEAF:
+        for(int i=0; i<4; i++){
+            shiness.push_back(1);
+        }
+        break;
+    case STONE:
+        for(int i=0; i<4; i++){
+            shiness.push_back(5);
+        }
+        break;
+    case BEDROCK:
+        for(int i=0; i<4; i++){
+            shiness.push_back(5);
+        }
+        break;
+    case COAL:
+        for(int i=0; i<4; i++){
+            shiness.push_back(5);
+        }
+        break;
+    case IRONORE:
+        for(int i=0; i<4; i++){
+            shiness.push_back(5);
+        }
+        break;
     default:
         for(int i=0; i<4; i++){
-            shiness.push_back(0.5);
+            shiness.push_back(1);
         }
+        break;
     }
 }
 
@@ -175,7 +244,7 @@ void createCubeVertAttribute(std::vector<glm::vec4>& pos,std::vector<glm::vec4>&
         pos.push_back(glm::vec4(i,j,k+1,1));
         pos.push_back(glm::vec4(i,j,k,1));
 
-        for(int i=0; i<4; i++){
+        for(int index=0; index<4; index++){
             nor.push_back(glm::vec4(-1,0,0,0));
             col.push_back(glm::vec4(0,1,0,1));
         }
@@ -191,7 +260,7 @@ void createCubeVertAttribute(std::vector<glm::vec4>& pos,std::vector<glm::vec4>&
         pos.push_back(glm::vec4(i+1,j,k,1));
         pos.push_back(glm::vec4(i+1,j,k+1,1));
 
-        for(int i=0; i<4; i++){
+        for(int index=0; index<4; index++){
             nor.push_back(glm::vec4(1,0,0,0));
             col.push_back(glm::vec4(1,0,0,1));
         }
@@ -207,7 +276,7 @@ void createCubeVertAttribute(std::vector<glm::vec4>& pos,std::vector<glm::vec4>&
         pos.push_back(glm::vec4(i,j,k+1,1));
         pos.push_back(glm::vec4(i+1,j,k+1,1));
 
-        for(int i=0; i<4; i++){
+        for(int index=0; index<4; index++){
             nor.push_back(glm::vec4(0,-1,0,0));
             col.push_back(glm::vec4(0,0,1,1));
         }
@@ -224,7 +293,7 @@ void createCubeVertAttribute(std::vector<glm::vec4>& pos,std::vector<glm::vec4>&
         pos.push_back(glm::vec4(i,j+1,k,1));
         pos.push_back(glm::vec4(i+1,j+1,k,1));
 
-        for(int i=0; i<4; i++){
+        for(int index=0; index<4; index++){
             nor.push_back(glm::vec4(0,1,0,0));
             col.push_back(glm::vec4(1,1,0,1));
         }
@@ -241,7 +310,7 @@ void createCubeVertAttribute(std::vector<glm::vec4>& pos,std::vector<glm::vec4>&
         pos.push_back(glm::vec4(i,j,k,1));
         pos.push_back(glm::vec4(i+1,j,k,1));
 
-        for(int i=0; i<4; i++){
+        for(int index=0; index<4; index++){
             nor.push_back(glm::vec4(0,0,-1,0));
             col.push_back(glm::vec4(0,1,1,1));
         }
@@ -257,7 +326,7 @@ void createCubeVertAttribute(std::vector<glm::vec4>& pos,std::vector<glm::vec4>&
         pos.push_back(glm::vec4(i+1,j,k+1,1));
         pos.push_back(glm::vec4(i,j,k+1,1));
 
-        for(int i=0; i<4; i++){
+        for(int index=0; index<4; index++){
             nor.push_back(glm::vec4(0,0,1,0));
             col.push_back(glm::vec4(1,0,1,1));
         }

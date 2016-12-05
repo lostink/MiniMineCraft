@@ -176,6 +176,7 @@ void MyGL::paintGL()
     //YuxinMM02 activate the Texture and Normal map before rendering world scene
     prog_lambert.bindTexture0();
     prog_lambert.bindNormalMap0();
+    prog_lambert.setEyePosition(Tester.eye);
     GLRenderWorld();
     prog_flat.setModelMatrix(glm::mat4(1.0));
     prog_flat.setViewProjMatrix(glm::mat4(1.0));
