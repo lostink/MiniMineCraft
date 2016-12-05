@@ -376,12 +376,12 @@ void character::RefreshBound()
     {
         int block_x = (((int)(eye[0])) / 16) + deltaBlock[i][0];
         int block_z = (((int)(eye[2])) / 16) + deltaBlock[i][1];
-        tuple<int,int,int> target(block_x * 16,0,block_z * 16);
+        tuple<int,int,int> target(block_x * 16,-128,block_z * 16);
         map<tuple<int,int,int>,blocktype>::iterator it1= mesh->find(target);
         if (it1 == mesh->end())
         {
             terrain->addNewChunk(block_x * 16,block_z * 16);
-            for (int j=0;j<4;++j){
+            for (int j=-8;j<4;++j){
                 tuple<int,int,int> startPos(block_x * 16,j*16,block_z * 16);
                 NewBlockVec.push_back(startPos);
             }

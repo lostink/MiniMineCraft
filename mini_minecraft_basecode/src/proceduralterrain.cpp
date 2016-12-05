@@ -316,12 +316,26 @@ void ProceduralTerrain::addNewChunk(int x, int z)
             for(int k = -127; k < 0; ++k)
             {
                 tuple<int, int, int> position(x + i , k, z + j);
-                mapWorld.insert(pair<tuple<int, int, int>, blocktype>(position, STONE));
+                map<tuple<int,int,int>,blocktype>::iterator it1= mapCave.find(position);
+                if (it1!=mapCave.end())
+                {
+                    if (mapCave[position] == LAVA)
+                        mapWorld.insert(pair<tuple<int, int, int>, blocktype>(position, LAVA));
+                }
+                else
+                    mapWorld.insert(pair<tuple<int, int, int>, blocktype>(position, STONE));
             }
             for(int k = 0; k < y; ++k)
             {
                 tuple<int, int, int> position(x + i , k, z + j);
-                mapWorld.insert(pair<tuple<int, int, int>, blocktype>(position, DIRT));
+                map<tuple<int,int,int>,blocktype>::iterator it1= mapCave.find(position);
+                if (it1!=mapCave.end())
+                {
+                    if (mapCave[position] == LAVA)
+                        mapWorld.insert(pair<tuple<int, int, int>, blocktype>(position, LAVA));
+                }
+                else
+                    mapWorld.insert(pair<tuple<int, int, int>, blocktype>(position, DIRT));
             }
         }
 
@@ -338,6 +352,7 @@ void ProceduralTerrain::CreateTunnel(int x, int y, int z, float radius)
                 if ((1.0 * i * i + 1.0 * j * j + 1.0 * k * k) > radius) continue;
                 tuple<int, int, int> position(x + i , y + k, z + j);
 
+                mapCave[position] = EMPTY;
                 map<tuple<int,int,int>,blocktype>::iterator it1= mapWorld.find(position);
                 if (it1!=mapWorld.end())
                     mapWorld.erase(it1);
@@ -348,16 +363,17 @@ void ProceduralTerrain::CreateTunnel(int x, int y, int z, float radius)
 // Create an ellipsoid-shaped cave of random XYZ scale
 void ProceduralTerrain::CreateEllipsoidcave(int x, int y, int z)
 {
-    int Scale_x = (rand() % 10) + 5;
-    int Scale_y = (rand() % 10) + 5;
-    int Scale_z = (rand() % 10) + 5;
+    int Scale_x = (rand() % 4) + 4;
+    int Scale_y = (rand() % 4) + 4;
+    int Scale_z = (rand() % 4) + 4;
 
     for(int i = -Scale_x; i <= Scale_x; ++i)
         for(int j = -Scale_y; j <= Scale_y; ++j)
             for(int k = -Scale_z; k <= Scale_z; ++k)
             {
-                if ((1.0 * i * i/9.0 + 1.0 * j * j/9.0 + 1.0 * k * k / 4.0) > 2) continue;
+                if ((1.0 * i * i/(Scale_x * Scale_x) + 1.0 * j * j/(Scale_y * Scale_y) + 1.0 * k * k /(Scale_z * Scale_z)) > 1) continue;
                 tuple<int, int, int> position(x + i , y + k, z + j);
+                mapCave[position] = EMPTY;
 
                 map<tuple<int,int,int>,blocktype>::iterator it1= mapWorld.find(position);
                 if (it1!=mapWorld.end())
@@ -369,6 +385,7 @@ void ProceduralTerrain::CreateEllipsoidcave(int x, int y, int z)
         for(int j = -Scale_y; j <= Scale_y; ++j)
             for(int k = -Scale_z; k <= Scale_z; ++k)
             {
+                if ((1.0 * i * i/(Scale_x * Scale_x) + 1.0 * j * j/(Scale_y * Scale_y) + 1.0 * k * k /(Scale_z * Scale_z)) > 1.1) continue;
                 tuple<int, int, int> CurrentBlock(x + i , y + k, z + j);
                 tuple<int, int, int> UpperBlock(x + i , y + k + 1, z + j);
                 map<tuple<int,int,int>,blocktype>::iterator it1= mapWorld.find(CurrentBlock);
@@ -382,7 +399,9 @@ void ProceduralTerrain::CreateEllipsoidcave(int x, int y, int z)
                             if (abs(di) + abs(dj) == 2) continue;
                             tuple<int, int, int> LavaBlock(x + i + di, y + k, z + j + dj);
                             mapWorld[LavaBlock] = LAVA;
+                            mapCave[LavaBlock] = LAVA;
                         }
+                    break;
                 }
             }
 }
@@ -396,7 +415,7 @@ void ProceduralTerrain::CaveGenerator()
 
     for (int step = 0; step < 100 ; ++step)
     {
-        if ((step > 10) && ( rand() % 50 > 30)){
+        if ((step > 20) && ( rand() % 50 > 30)){
             break;
             // Ensuring Length is greater than 10 and stop randomly.
         }
@@ -410,7 +429,7 @@ void ProceduralTerrain::CaveGenerator()
             int step_x = int(Moving_x + Direction_x > 0?Moving_x + Direction_x:Moving_x + Direction_x-1);
             int step_y = int(Moving_y + Direction_y > 0?Moving_y + Direction_y:Moving_y + Direction_y-1);
             int step_z = int(Moving_z + Direction_z > 0?Moving_z + Direction_z:Moving_z + Direction_z-1);
-            CreateTunnel(step_x,step_y,step_z, 2.5);
+            CreateTunnel(step_x,step_y,step_z, 3.5);
         }
         Moving_x+=Direction_x * 3;
         Moving_y+=Direction_y * 3;
