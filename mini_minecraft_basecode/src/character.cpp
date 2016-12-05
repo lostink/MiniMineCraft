@@ -1,10 +1,14 @@
 #include "character.h"
-
+#define RIVER_HEIGHT 4
 character::character():WorldCamera(nullptr),mesh(nullptr),velocity_down(0),Manager(nullptr),terrain(nullptr)
 {
     upAngle = 0;
     DisableFlyingAndCollision = 0;
     velocity_down = 0;
+    SentenceGenerate();
+    printf("Generating Rivers...");
+    ParsingMain(glm::vec3(32,4,32),glm::vec3(1,0,0),river_sentence_main,0,river_sentence_main.size(),4);
+    ParsingBranch(glm::vec3(16,4,32),glm::vec3(-1,0,0),river_sentence_branch,0,river_sentence_branch.size(),4);
 }
 void character::SetMainCamera(Camera *input)
 {
@@ -13,6 +17,22 @@ void character::SetMainCamera(Camera *input)
 void character::SetMesh(map<tuple<int, int, int>, blocktype> *input)
 {
     mesh = input;
+    //Initialize my river block
+    //Here insert my river block
+    for (int fx = 0;fx<64;++fx)
+        for (int fz = 0;fz<64;++fz)
+        {
+            tuple<int,int,int> River_block(fx,RIVER_HEIGHT,fz);
+            map<tuple<int,int,int>,blocktype>::iterator it_river = River_main.find(River_block);
+            map<tuple<int,int,int>,blocktype>::iterator it_river_branchj = River_branch.find(River_block);
+
+            if (it_river!=River_main.end() || it_river_branchj!=River_branch.end())
+            {
+                (*mesh)[River_block] = WATER;
+                DigToSky(fx,RIVER_HEIGHT,fz);
+            }
+        }
+    //Insert end.
 }
 void character::SetManager(ChunkManager *input)
 {
@@ -55,9 +75,9 @@ void character::CheckTranslateAlongLook(float amt){
     forward_vec = glm::normalize(forward_vec);
     glm::vec3 translation = forward_vec * (amt>0?amt + 0.3f:amt - 0.3f);//Treat character as a cylinder
     glm::vec3 temp_eye = eye + translation;
-    int x = (int)temp_eye[0];
-    int y = (int)temp_eye[1];
-    int z = (int)temp_eye[2];
+    int x = (int)(temp_eye[0]>0?temp_eye[0]:temp_eye[0]-1);
+    int y = (int)(temp_eye[1]>0?temp_eye[1]:temp_eye[1]-1);
+    int z = (int)(temp_eye[2]>0?temp_eye[2]:temp_eye[2]-1);
 
     tuple<int,int,int> check1(x,y,z),check2(x,y-1,z);
     map<tuple<int,int,int>,blocktype>::iterator it1= mesh->find(check1);
@@ -80,9 +100,9 @@ void character::CheckTranslateAlongRight(float amt){
     }
     glm::vec3 translation = right * (amt>0? amt + 0.3f:amt -0.3f);//Treat character as a cylinder
     glm::vec3 temp_eye = eye + translation;
-    int x = (int)temp_eye[0];
-    int y = (int)temp_eye[1];
-    int z = (int)temp_eye[2];
+    int x = (int)(temp_eye[0]>0?temp_eye[0]:temp_eye[0]-1);
+    int y = (int)(temp_eye[1]>0?temp_eye[1]:temp_eye[1]-1);
+    int z = (int)(temp_eye[2]>0?temp_eye[2]:temp_eye[2]-1);
     tuple<int,int,int> check1(x,y,z),check2(x,y-1,z);
     map<tuple<int,int,int>,blocktype>::iterator it1= mesh->find(check1);
     map<tuple<int,int,int>,blocktype>::iterator it2= mesh->find(check2);
@@ -103,9 +123,9 @@ void character::CheckTranslateAlongUp(float amt){
     }
     glm::vec3 translation = world_up * (amt);//Treat character as a cylinder
     glm::vec3 temp_eye = eye + translation;
-    int x = (int)temp_eye[0];
-    int y = (int)temp_eye[1];
-    int z = (int)temp_eye[2];
+    int x = (int)(temp_eye[0]>0?temp_eye[0]:temp_eye[0]-1);
+    int y = (int)(temp_eye[1]>0?temp_eye[1]:temp_eye[1]-1);
+    int z = (int)(temp_eye[2]>0?temp_eye[2]:temp_eye[2]-1);
 
     tuple<int,int,int> check1(x,y,z);
     map<tuple<int,int,int>,blocktype>::iterator it1= mesh->find(check1);
@@ -160,16 +180,16 @@ void character::Falling()
     if (mesh == nullptr)
         return;
     velocity_down += G;
-    int x = (int)eye[0];
-    int y = (int)eye[2];
+    int x = (int)(eye[0] > 0?eye[0]:eye[0]-1);
+    int y = (int)(eye[2] > 0?eye[2]:eye[2]-1);
     int z;
     if (velocity_down >= 0){
         double temp_z = (eye[1] - 1.5f);
-        z = (int)temp_z;
+        z = (int)(temp_z>0?temp_z:temp_z-1);
     }
     else{
         double temp_z = (eye[1] + 0.5f);
-        z = (int)temp_z;
+        z = (int)(temp_z>0?temp_z:temp_z-1);
     }
     if (velocity_down > 0)
     {
@@ -222,9 +242,9 @@ void character::DeleteBlockLookAt()
         glm::vec3 NormForThis = 1.0f / 12.0f * norm;
         NormForThis *= (float)i;
         glm::vec3 find = (start + NormForThis);
-        int x = (int)find[0];
-        int y = (int)find[1];
-        int z = (int)find[2];
+        int x = (int)(find[0]>0?find[0]:find[0]-1);
+        int y = (int)(find[1]>0?find[1]:find[1]-1);
+        int z = (int)(find[2]>0?find[2]:find[2]-1);
         tuple<int,int,int> temp(x,y,z);
         map<tuple<int,int,int>,blocktype>::iterator it1= mesh->find(temp);
         //printf("Find:%d %d %d\n",x,y,z);
@@ -258,9 +278,9 @@ void character::AddBlockToLookAt()
         glm::vec3 NormForThis = 1.0f / 12.0f * norm;
         NormForThis *= (float)i;
         glm::vec3 find = (start + NormForThis);
-        int x = (int)find[0];
-        int y = (int)find[1];
-        int z = (int)find[2];
+        int x = (int)(find[0]>0?find[0]:find[0]-1);
+        int y = (int)(find[1]>0?find[1]:find[1]-1);
+        int z = (int)(find[2]>0?find[2]:find[2]-1);
         tuple<int,int,int> temp(x,y,z);
         map<tuple<int,int,int>,blocktype>::iterator it1= mesh->find(temp);
         if (it1!=mesh->end())
@@ -349,9 +369,9 @@ void character::AddBlockToLookAt()
         NewBlock = result + glm::ivec3(0,0, 1);
     else if (FacingNorm[2] < -0.5)
         NewBlock = result + glm::ivec3(0,0,-1);
-    int eye_x = (int)eye[0];
-    int eye_y = (int)eye[1];
-    int eye_z = (int)eye[2];
+    int eye_x = (int)(eye[0]>0?eye[0]:eye[0]-1);
+    int eye_y = (int)(eye[1]>0?eye[1]:eye[1]-1);
+    int eye_z = (int)(eye[2]>0?eye[2]:eye[2]-1);
     if (((NewBlock[0] == eye_x)&&(NewBlock[1] == eye_y  )&&(NewBlock[2] == eye_z)) ||
        ((NewBlock[0] == eye_x)&&(NewBlock[1] == eye_y-1)&&(NewBlock[2] == eye_z)))
         return;//Body Intersection
@@ -374,13 +394,27 @@ void character::RefreshBound()
     deltaBlock[7] = glm::ivec2(+1,+1);
     for (int i=0;i<8;++i)
     {
-        int block_x = (((int)(eye[0])) / 16) + deltaBlock[i][0];
-        int block_z = (((int)(eye[2])) / 16) + deltaBlock[i][1];
+        int block_x = (((int)(eye[0]>=0?eye[0]:eye[0]-16)) / 16) + deltaBlock[i][0];
+        int block_z = (((int)(eye[2]>=0?eye[2]:eye[2]-16)) / 16) + deltaBlock[i][1];
         tuple<int,int,int> target(block_x * 16,0,block_z * 16);
         map<tuple<int,int,int>,blocktype>::iterator it1= mesh->find(target);
         if (it1 == mesh->end())
         {
             terrain->addNewChunk(block_x * 16,block_z * 16);
+            //Here insert my river block
+            for (int fx = 0;fx<16;++fx)
+                for (int fz = 0;fz<16;++fz)
+                {
+                    tuple<int,int,int> River_block(block_x * 16+fx,RIVER_HEIGHT,block_z*16+fz);
+                    map<tuple<int,int,int>,blocktype>::iterator it_river = River_main.find(River_block);
+                    map<tuple<int,int,int>,blocktype>::iterator it_river_branchj = River_branch.find(River_block);
+                    if (it_river!=River_main.end() || it_river_branchj!=River_branch.end())
+                    {
+                        (*mesh)[River_block] = WATER;
+                        DigToSky(block_x * 16+fx,RIVER_HEIGHT,block_z*16+fz);
+                    }
+                }
+            //Insert end.
             for (int j=0;j<4;++j){
                 tuple<int,int,int> startPos(block_x * 16,j*16,block_z * 16);
                 NewBlockVec.push_back(startPos);
@@ -395,4 +429,159 @@ void character::ChangeFlyingAndCollision()
 vector<tuple<int,int,int>>* character::GetNewBlockVec()
 {
     return &NewBlockVec;
+}
+#define AWAYDISTANCE 3
+void character::DigToSky(int x, int y, int z){
+    for (int i=-AWAYDISTANCE;i<=AWAYDISTANCE;++i)
+        for (int j=-AWAYDISTANCE;j<=AWAYDISTANCE;++j)
+        {
+            int height = max(abs(i),abs(j));
+            for (int tempy = y + height*3;tempy < 64;++tempy)
+            {
+                tuple<int,int,int> check(x+i,tempy,z+j);
+                map<tuple<int,int,int>,blocktype>::iterator it1= mesh->find(check);
+                if (it1!=mesh->end())
+                    mesh->erase(it1);
+            }
+        }
+}
+void character::ParsingMain(glm::vec3 location, glm::vec3 direction,const vector<char>&sentence, int start, int end, int width)
+{
+    if (start >= end) return;
+    if (width <= 0) return;
+    if (sentence[start] == 'A')
+    {
+        int x = int(location[0]>0?location[0]:location[0]-1);
+        int y = int(location[1]>0?location[1]:location[1]-1);
+        int z = int(location[2]>0?location[2]:location[2]-1);
+        for (int dx = -1 * width;dx <= width;++dx)
+            for (int dz = -1 * width;dz <= width ;++dz)
+            {
+                if (abs(dx) + abs(dz)<= width)
+                {
+//                    printf("%d %d %d\n",x+dx,y,z+dz);
+                    tuple<int ,int , int> current(x + dx,RIVER_HEIGHT,z + dz);
+                    River_main[current] = WATER;
+                }
+            }
+        ParsingMain(location+direction,direction,sentence,start + 1,end,width);
+    }
+    else if (sentence[start] == 'B')
+    {
+        ParsingMain(location,direction,sentence,start+1,end,width);
+        if (rand() % 20 == 4)
+        {
+            glm::vec3 direction_ori(direction);
+            float flag = (rand() % 2 == 1)?1:-1;
+            float angle = flag * 3.141592653589793 / 4;
+            direction[0] = direction_ori[0] * cos(angle) +direction_ori[2] * sin(angle);
+            direction[1] = 0;
+            direction[2] = direction_ori[0] * sin(angle) -direction_ori[2] * cos(angle);
+            ParsingMain(location,direction,sentence,start+1,end,width-2);
+        }
+    }
+}
+void character::ParsingBranch(glm::vec3 location, glm::vec3 direction,const vector<char>&sentence, int start, int end, int width)
+{
+    if (start >= end) return;
+    if (width <= 0) return;
+    printf("%c\n",sentence[start]);
+    if (sentence[start] == 'A')
+    {
+        for (int times = 0;times < 10;++times)
+        {
+            int x = int(location[0]>0?location[0]:location[0]-1);
+            int y = int(location[1]>0?location[1]:location[1]-1);
+            int z = int(location[2]>0?location[2]:location[2]-1);
+            for (int dx = -1 * width;dx <= width;++dx)
+                for (int dz = -1 * width;dz <= width ;++dz)
+                {
+                    if (abs(dx) + abs(dz)<= width)
+                    {
+    //                    printf("%d %d %d\n",x+dx,y,z+dz);
+                        tuple<int ,int , int> current(x + dx,RIVER_HEIGHT,z + dz);
+                        River_branch[current] = WATER;
+                    }
+                }
+            location = location + direction;
+        }
+        ParsingBranch(location+direction,direction,sentence,start + 1,end,width);
+    }
+    else if (sentence[start] == 'B')
+    {
+        glm::vec3 direction_ori(direction);
+        float angle = 3.3141592653589793 / 4;
+        direction[0] = direction_ori[0] * cos(angle) +direction_ori[2] * sin(angle);
+        direction[1] = 0;
+        direction[2] = direction_ori[0] * sin(angle) -direction_ori[2] * cos(angle);
+        ParsingBranch(location,direction,sentence,start+1,end,width-1);
+        direction[0] = direction_ori[0] * cos(-angle) +direction_ori[2] * sin(-angle);
+        direction[1] = 0;
+        direction[2] = direction_ori[0] * sin(-angle) -direction_ori[2] * cos(-angle);
+        ParsingBranch(location,direction,sentence,start+1,end,width-1);
+    }
+}
+void character::SentenceGenerate()
+{
+    river_sentence_main.clear();
+    river_sentence_branch.clear();
+    //River 1:
+    //Main River with few branches
+    river_sentence_main.push_back('A');
+    river_sentence_main.push_back('A');
+    river_sentence_main.push_back('A');
+    river_sentence_main.push_back('A');
+    river_sentence_main.push_back('B');
+    river_sentence_main.push_back('A');
+    river_sentence_main.push_back('A');
+    while (river_sentence_main.size() < 200)
+    {
+        vector<char> temp;
+        temp.clear();
+        for (int i=0;i<river_sentence_main.size();++i)
+        {
+            if (river_sentence_main[i] == 'A')
+            {
+                temp.push_back('A');
+                temp.push_back('A');
+                temp.push_back('A');
+                temp.push_back('A');
+                temp.push_back('B');
+                temp.push_back('A');
+                temp.push_back('A');
+            }
+            else
+                temp.push_back(river_sentence_main[i]);
+        }
+        river_sentence_main.clear();
+        for (int i=0;i<temp.size();++i)
+            river_sentence_main.push_back(temp[i]);
+    }
+    //River 2:
+    //Branching river:
+    for (int i=0;i<2;++i)
+        river_sentence_branch.push_back('A');
+    river_sentence_branch.push_back('B');
+    while (river_sentence_branch.size() <15)
+    {
+        vector<char> temp;
+        temp.clear();
+        for (int i=0;i<river_sentence_branch.size();++i)
+        {
+            if (river_sentence_branch[i] == 'A')
+            {
+                for (int i=0;i<2;++i)
+                    temp.push_back('A');
+                temp.push_back('B');
+            }
+            else
+                temp.push_back(river_sentence_branch[i]);
+            if (temp.size() > 15)
+                break;
+        }
+        river_sentence_branch.clear();
+        for (int i=0;i<temp.size();++i)
+            river_sentence_branch.push_back(temp[i]);
+    }
+
 }

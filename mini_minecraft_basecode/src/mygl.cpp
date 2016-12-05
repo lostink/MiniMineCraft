@@ -31,6 +31,11 @@ MyGL::MyGL(QWidget *parent)
     //Test end.
     terrain.createInitialWorld();
 
+    Tester.SetMainCamera(&gl_camera);
+    Tester.SetMesh(&terrain.mapWorld);
+    Tester.SetManager(&chunkManager);
+    Tester.SetTerrain(&terrain);
+
     std::tuple<int, int, int> startPos(0,0,0);
     for(int x=0; x<4; x++){
         for(int y=0; y<4; y++){
@@ -40,10 +45,6 @@ MyGL::MyGL(QWidget *parent)
             }
         }
     }
-    Tester.SetMainCamera(&gl_camera);
-    Tester.SetMesh(&terrain.mapWorld);
-    Tester.SetManager(&chunkManager);
-    Tester.SetTerrain(&terrain);
 }
 
 MyGL::~MyGL()

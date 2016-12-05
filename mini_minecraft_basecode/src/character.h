@@ -6,6 +6,8 @@
 #include <proceduralterrain.h>
 #include <scene/chunkmanager.h>
 #include <proceduralterrain.h>
+#include <algorithm>
+using std::max;
 using std::map;
 using std::tuple;
 const float G = 0.01;//9.8 M/S^2 1 -> 16
@@ -21,6 +23,8 @@ public:
     float upAngle;//Used to make constraint
     bool DisableFlyingAndCollision;
     vector<tuple<int,int,int>> NewBlockVec;
+    vector<char> river_sentence_main,river_sentence_branch;
+    map<tuple<int,int,int>,blocktype> River_main,River_branch;
 
     character();
     void SetMainCamera(Camera *input);
@@ -48,5 +52,10 @@ public:
     void DeleteBlockLookAt();
     void AddBlockToLookAt();
     void RefreshBound();
+    //River part:
+    void SentenceGenerate();
+    void ParsingMain(glm::vec3 location,glm::vec3 direction,const vector<char>& sentence,int start,int end,int width);
+    void ParsingBranch(glm::vec3 location,glm::vec3 direction,const vector<char>& sentence,int start,int end,int width);
+    void DigToSky(int x,int y,int z);
 };
 #endif // CHARACTER_H
