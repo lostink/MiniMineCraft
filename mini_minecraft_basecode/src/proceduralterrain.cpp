@@ -352,11 +352,30 @@ void ProceduralTerrain::CreateTunnel(int x, int y, int z, float radius)
                 if ((1.0 * i * i + 1.0 * j * j + 1.0 * k * k) > radius) continue;
                 tuple<int, int, int> position(x + i , y + k, z + j);
 
-                mapCave[position] = EMPTY;
                 map<tuple<int,int,int>,blocktype>::iterator it1= mapWorld.find(position);
                 if (it1!=mapWorld.end())
                     mapWorld.erase(it1);
-
+            }
+    //IRON AND COAL
+    for(int i = -CAVE_SIZE; i <= CAVE_SIZE; ++i)
+        for(int j = -CAVE_SIZE; j <= CAVE_SIZE; ++j)
+            for(int k = -CAVE_SIZE; k <= CAVE_SIZE; ++k)
+            {
+                if ((1.0 * i * i + 1.0 * j * j + 1.0 * k * k) > radius + 1) continue;
+                tuple<int, int, int> position(x + i , y + k, z + j);
+                map<tuple<int,int,int>,blocktype>::iterator it1= mapWorld.find(position);
+                if (it1!=mapWorld.end())
+                {
+                    int rand_num = rand();
+                    if (rand_num % 5 == 4)
+                    {
+                        it1->second = COAL;
+                    }
+                    else if (rand_num % 5 == 3)
+                    {
+                        it1->second = IRONORE;
+                    }
+                }
             }
 }
 
@@ -387,10 +406,8 @@ void ProceduralTerrain::CreateEllipsoidcave(int x, int y, int z)
             {
                 if ((1.0 * i * i/(Scale_x * Scale_x) + 1.0 * j * j/(Scale_y * Scale_y) + 1.0 * k * k /(Scale_z * Scale_z)) > 1.1) continue;
                 tuple<int, int, int> CurrentBlock(x + i , y + k, z + j);
-                tuple<int, int, int> UpperBlock(x + i , y + k + 1, z + j);
                 map<tuple<int,int,int>,blocktype>::iterator it1= mapWorld.find(CurrentBlock);
-                map<tuple<int,int,int>,blocktype>::iterator it2= mapWorld.find(UpperBlock);
-                if ((it1!=mapWorld.end()) && (it2==mapWorld.end()))
+                if (it1!=mapWorld.end())
                 {
                     if ((rand() % 20) <= 2)
                     for (int di = -1; di <= 1; ++ di)
@@ -404,6 +421,27 @@ void ProceduralTerrain::CreateEllipsoidcave(int x, int y, int z)
                     break;
                 }
             }
+    //IRON AND COAL
+    for(int i = -Scale_x; i <= Scale_x; ++i)
+        for(int j = -Scale_y; j <= Scale_y; ++j)
+            for(int k = -Scale_z; k <= Scale_z; ++k)
+            {
+                if ((1.0 * i * i/(Scale_x * Scale_x) + 1.0 * j * j/(Scale_y * Scale_y) + 1.0 * k * k /(Scale_z * Scale_z)) > 1.5) continue;
+                tuple<int, int, int> position(x + i , y + k, z + j);
+                map<tuple<int,int,int>,blocktype>::iterator it1= mapWorld.find(position);
+                if (it1!=mapWorld.end())
+                {
+                    int rand_num = rand();
+                    if (rand_num % 5 == 4)
+                    {
+                        it1->second = COAL;
+                    }
+                    else if (rand_num % 5 == 3)
+                    {
+                        it1->second = IRONORE;
+                    }
+                }
+            }
 }
 
 // Generate caves after the terrain has generated
@@ -413,7 +451,7 @@ void ProceduralTerrain::CaveGenerator()
     float Moving_y = 0;
     float Moving_z = 32;
 
-    for (int step = 0; step < 100 ; ++step)
+    for (int step = 0; step < 128 ; ++step)
     {
         if ((step > 20) && ( rand() % 50 > 30)){
             break;

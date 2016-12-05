@@ -250,7 +250,7 @@ void character::DeleteBlockLookAt()
         //printf("Find:%d %d %d\n",x,y,z);
         //printf("%f %f %f\n",find[0],find[1],find[2]);
         //printf("start:%f %f %f\n\n",start[0],start[1],start[2]);
-        if (it1!=mesh->end())
+        if ((it1!=mesh->end()))
         {
             result[0] = x;
             result[1] = y;
@@ -262,10 +262,14 @@ void character::DeleteBlockLookAt()
         return;
     tuple<int,int,int> target(result[0],result[1],result[2]);
     map<tuple<int,int,int>,blocktype>::iterator it1= mesh->find(target);
-    mesh->erase(it1);
-    //TODO:
-    //Tell chunk management to delete this
-    Manager->deleteBlockAt(result[0],result[1],result[2]);
+    if (it1->second == BEDROCK) return;
+    else
+    {
+        mesh->erase(it1);
+        //TODO:
+        //Tell chunk management to delete this
+        Manager->deleteBlockAt(result[0],result[1],result[2]);
+    }
 }
 void character::AddBlockToLookAt()
 {
