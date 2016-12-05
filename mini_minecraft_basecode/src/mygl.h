@@ -42,7 +42,7 @@ private:
 
     /// Timer linked to timerUpdate(). Fires approx. 60 times per second
     QTimer timer;
-//Code from lostink for testing character
+    //Code from lostink for testing character
     character Tester;
     bool ShowMouse;
 //tester code end

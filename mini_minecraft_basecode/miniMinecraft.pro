@@ -45,3 +45,12 @@ address_sanitizer {
 HEADERS +=
 
 SOURCES +=
+
+win32: LIBS += -L$$PWD/soillib/ -lSOIL
+       LIBS += -lopengl32
+
+INCLUDEPATH += $$PWD/soillib
+DEPENDPATH += $$PWD/soillib
+
+win32:!win32-g++: PRE_TARGETDEPS += $$PWD/soillib/SOIL.lib
+else:win32-g++: PRE_TARGETDEPS += $$PWD/soillib/libSOIL.a

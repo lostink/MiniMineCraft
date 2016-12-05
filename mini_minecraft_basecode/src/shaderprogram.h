@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 
 #include "drawable.h"
+#include <soillib/src/SOIL.h>
 
 
 class ShaderProgram
@@ -15,6 +16,10 @@ public:
     GLuint fragShader; // A handle for the fragment shader stored in this shader program
     GLuint prog;       // A handle for the linked shader program stored in this class
 
+    //Yuxin MM02
+    GLuint textureHandler; //A handle for the texture map loaded for lambert shader
+    GLuint normalmapHandler; //A handle for the nornal map loaded for lambert shader
+
     int attrPos; // A handle for the "in" vec4 representing vertex position in the vertex shader
     int attrNor; // A handle for the "in" vec4 representing vertex normal in the vertex shader
     int attrCol; // A handle for the "in" vec4 representing vertex color in the vertex shader
@@ -23,7 +28,16 @@ public:
     int unifModelInvTr; // A handle for the "uniform" mat4 representing inverse transpose of the model matrix in the vertex shader
     int unifViewProj; // A handle for the "uniform" mat4 representing combined projection and view matrices in the vertex shader
     int unifColor; // A handle for the "uniform" vec4 representing color of geometry in the vertex shader
-    int unifSampler;
+
+    //Yuxin MM02
+    int unifSampler; //A handle for the "uniform" textureSampler representing the texture map in fragment shader
+    int attrUv; //A handle for the "in" vec2 representing uv coordinates in the vertex shader
+    int unifNormal; //A handle for the "uniform" normalSampler representing the normal map in fragment shader
+    int unifTime; //A handle for the "uniform" int u_Time representing a timer which can alter color of fragments
+    int attrBlockType; //A handle for the "in" float representing the block uv animated type
+    int attrShiness; //A handle for the "in" float representing the block shiness
+    int unifEye; //A handle for the "uniform" vec4 representing the eye position in the world
+
 
 public:
     ShaderProgram(GLWidget277* context);
@@ -47,6 +61,14 @@ public:
     void printLinkInfoLog(int prog);
 
     QString qTextFileRead(const char*);
+
+    //Yuxin MM02
+    void bindTexture0();
+    void setUpTexture();
+    void bindNormalMap0();
+    void setUpNormalMap();
+    void setTimeCount(int timeCount);
+    void setEyePosition(glm::vec3 eyePos);
 
 private:
     GLWidget277* context;   // Since Qt's OpenGL support is done through classes like QOpenGLFunctions_3_2_Core,

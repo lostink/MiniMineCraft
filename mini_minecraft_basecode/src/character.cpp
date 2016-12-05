@@ -28,8 +28,8 @@ void character::SetMesh(map<tuple<int, int, int>, blocktype> *input)
 
             if (it_river!=River_main.end() || it_river_branchj!=River_branch.end())
             {
-                (*mesh)[River_block] = WATER;
                 DigToSky(fx,RIVER_HEIGHT,fz);
+                (*mesh)[River_block] = WATER;
             }
         }
     //Insert end.
@@ -382,6 +382,7 @@ void character::AddBlockToLookAt()
 }
 void character::RefreshBound()
 {
+    //printf("In!\n");
     NewBlockVec.clear();
     glm::ivec2 deltaBlock[8];
     deltaBlock[0] = glm::ivec2(-1,-1);
@@ -396,7 +397,7 @@ void character::RefreshBound()
     {
         int block_x = (((int)(eye[0]>=0?eye[0]:eye[0]-16)) / 16) + deltaBlock[i][0];
         int block_z = (((int)(eye[2]>=0?eye[2]:eye[2]-16)) / 16) + deltaBlock[i][1];
-        tuple<int,int,int> target(block_x * 16,0,block_z * 16);
+        tuple<int,int,int> target(block_x * 16,-128,block_z * 16);
         map<tuple<int,int,int>,blocktype>::iterator it1= mesh->find(target);
         if (it1 == mesh->end())
         {
@@ -410,12 +411,12 @@ void character::RefreshBound()
                     map<tuple<int,int,int>,blocktype>::iterator it_river_branchj = River_branch.find(River_block);
                     if (it_river!=River_main.end() || it_river_branchj!=River_branch.end())
                     {
-                        (*mesh)[River_block] = WATER;
                         DigToSky(block_x * 16+fx,RIVER_HEIGHT,block_z*16+fz);
+                        (*mesh)[River_block] = WATER;
                     }
                 }
             //Insert end.
-            for (int j=0;j<4;++j){
+            for (int j=-8;j<4;++j){
                 tuple<int,int,int> startPos(block_x * 16,j*16,block_z * 16);
                 NewBlockVec.push_back(startPos);
             }
@@ -436,12 +437,20 @@ void character::DigToSky(int x, int y, int z){
         for (int j=-AWAYDISTANCE;j<=AWAYDISTANCE;++j)
         {
             int height = max(abs(i),abs(j));
-            for (int tempy = y + height*3;tempy < 64;++tempy)
+            bool grass_flag = 1;
+            for (int tempy = y + height*3 ;tempy < 64;++tempy)
             {
                 tuple<int,int,int> check(x+i,tempy,z+j);
                 map<tuple<int,int,int>,blocktype>::iterator it1= mesh->find(check);
                 if (it1!=mesh->end())
-                    mesh->erase(it1);
+                {
+                    if (grass_flag){
+                        (*mesh)[check] = GRASS;
+                        grass_flag = 0;
+                    }
+                    else
+                        mesh->erase(it1);
+                }
             }
         }
 }
@@ -485,7 +494,7 @@ void character::ParsingBranch(glm::vec3 location, glm::vec3 direction,const vect
 {
     if (start >= end) return;
     if (width <= 0) return;
-    printf("%c\n",sentence[start]);
+//    printf("%c\n",sentence[start]);
     if (sentence[start] == 'A')
     {
         for (int times = 0;times < 10;++times)

@@ -32,14 +32,6 @@ void Chunk::createChunk(std::map<std::tuple<int, int, int>,blocktype> &blockInfo
     }
 
 
-    /*for(unsigned int index=0; index<blockInfo.size(); index++){
-        int i = std::get<0>(blockInfo[index]); //i
-        int j = std::get<1>(blockInfo[index]); //j
-        int k = std::get<2>(blockInfo[index]); //k
-        blocks[i][j][k].setBlockActive(true);
-    }*/
-
-
     //Start from startPos, check if the map key exists
     int startX = std::get<0>(startPos);
     int startY = std::get<1>(startPos);
@@ -52,103 +44,319 @@ void Chunk::createChunk(std::map<std::tuple<int, int, int>,blocktype> &blockInfo
                 //If this block exists in the terrain
                 if (blockInfo.find(key) != blockInfo.end()){
                     blocks[x-startX][y-startY][z-startZ].setBlockActive(true);
+                    //Yuxin MM2
+                    blocks[x-startX][y-startY][z-startZ].setBlockType(blockInfo.at(key));
                 }
             }
         }
     }
 }
 
+//Yuxin MM02
+void getBlockFaceUV(blocktype btype, facetype ftype, std::vector<glm::vec2>& uv){
+    switch (btype)
+    {
+    case DIRT:
+       // Add your code here
+        if(ftype == side){
+            uv.push_back(glm::vec2(2.0/16,0));
+            uv.push_back(glm::vec2(3.0/16,0));
+            uv.push_back(glm::vec2(3.0/16,1.0/16));
+            uv.push_back(glm::vec2(2.0/16,1.0/16));
+        }
+        if(ftype == top){
+            uv.push_back(glm::vec2(2.0/16,0));
+            uv.push_back(glm::vec2(3.0/16,0));
+            uv.push_back(glm::vec2(3.0/16,1.0/16));
+            uv.push_back(glm::vec2(2.0/16,1.0/16));
+        }
+        if(ftype == bottom){
+            uv.push_back(glm::vec2(2.0/16,0));
+            uv.push_back(glm::vec2(3.0/16,0));
+            uv.push_back(glm::vec2(3.0/16,1.0/16));
+            uv.push_back(glm::vec2(2.0/16,1.0/16));
+
+        }
+        break;
+    case GRASS:
+       // Add code here
+        if(ftype == side){
+            uv.push_back(glm::vec2(3.0/16,0));
+            uv.push_back(glm::vec2(4.0/16,0));
+            uv.push_back(glm::vec2(4.0/16,1.0/16));
+            uv.push_back(glm::vec2(3.0/16,1.0/16));
+        }
+        if(ftype == top){
+            uv.push_back(glm::vec2(8.0/16,2.0/16));
+            uv.push_back(glm::vec2(9.0/16,2.0/16));
+            uv.push_back(glm::vec2(9.0/16,3.0/16));
+            uv.push_back(glm::vec2(8.0/16,3.0/16));
+        }
+        if(ftype == bottom){
+            uv.push_back(glm::vec2(2.0/16,0));
+            uv.push_back(glm::vec2(3.0/16,0));
+            uv.push_back(glm::vec2(3.0/16,1.0/16));
+            uv.push_back(glm::vec2(2.0/16,1.0/16));
+
+        }
+        break;
+    case LAVA:
+        //Add code here
+        uv.push_back(glm::vec2(13.0/16,14.0/16));
+        uv.push_back(glm::vec2(14.0/16,14.0/16));
+        uv.push_back(glm::vec2(14.0/16,15.0/16));
+        uv.push_back(glm::vec2(13.0/16,15.0/16));
+        break;
+    case WATER:
+        uv.push_back(glm::vec2(13.0/16,12.0/16));
+        uv.push_back(glm::vec2(14.0/16,12.0/16));
+        uv.push_back(glm::vec2(14.0/16,13.0/16));
+        uv.push_back(glm::vec2(13.0/16,13.0/16));
+        break;
+    case WOOD:
+        uv.push_back(glm::vec2(4.0/16,1.0/16));
+        uv.push_back(glm::vec2(5.0/16,1.0/16));
+        uv.push_back(glm::vec2(5.0/16,2.0/16));
+        uv.push_back(glm::vec2(4.0/16,2.0/16));
+        break;
+    case LEAF:
+        uv.push_back(glm::vec2(5.0/16,3.0/16));
+        uv.push_back(glm::vec2(6.0/16,3.0/16));
+        uv.push_back(glm::vec2(6.0/16,4.0/16));
+        uv.push_back(glm::vec2(5.0/16,4.0/16));
+        break;
+    case STONE:
+        uv.push_back(glm::vec2(1.0/16,0));
+        uv.push_back(glm::vec2(2.0/16,0));
+        uv.push_back(glm::vec2(2.0/16,1.0/16));
+        uv.push_back(glm::vec2(1.0/16,1.0/16));
+        break;
+    case BEDROCK:
+        uv.push_back(glm::vec2(1.0/16,1.0/16));
+        uv.push_back(glm::vec2(2.0/16,1.0/16));
+        uv.push_back(glm::vec2(2.0/16,2.0/16));
+        uv.push_back(glm::vec2(1.0/16,2.0/16));
+        break;
+    case COAL:
+        uv.push_back(glm::vec2(2.0/16,2.0/16));
+        uv.push_back(glm::vec2(3.0/16,2.0/16));
+        uv.push_back(glm::vec2(3.0/16,3.0/16));
+        uv.push_back(glm::vec2(2.0/16,3.0/16));
+        break;
+    case IRONORE:
+        uv.push_back(glm::vec2(1.0/16,2.0/16));
+        uv.push_back(glm::vec2(2.0/16,2.0/16));
+        uv.push_back(glm::vec2(2.0/16,3.0/16));
+        uv.push_back(glm::vec2(1.0/16,3.0/16));
+        break;
+    default:
+        uv.push_back(glm::vec2(0.0/16,0.0/16));
+        uv.push_back(glm::vec2(1.0/16,0.0/16));
+        uv.push_back(glm::vec2(1.0/16,1.0/16));
+        uv.push_back(glm::vec2(0.0/16,1.0/16));
+        break;
+    }
+
+}
+
+void getBlockFaceShiness(blocktype btype, std::vector<float>& shiness){
+    switch(btype)
+    {
+    case DIRT:
+        for(int i=0; i<4; i++){
+            shiness.push_back(2);
+        }
+        break;
+    case GRASS:
+        for(int i=0; i<4; i++){
+            shiness.push_back(1);
+        }
+        break;
+    case LAVA:
+        for(int i=0; i<4; i++){
+            shiness.push_back(2);
+        }
+        break;
+    case WATER:
+        for(int i=0; i<4; i++){
+            shiness.push_back(2);
+        }
+        break;
+    case WOOD:
+        for(int i=0; i<4; i++){
+            shiness.push_back(4);
+        }
+        break;
+    case LEAF:
+        for(int i=0; i<4; i++){
+            shiness.push_back(1);
+        }
+        break;
+    case STONE:
+        for(int i=0; i<4; i++){
+            shiness.push_back(5);
+        }
+        break;
+    case BEDROCK:
+        for(int i=0; i<4; i++){
+            shiness.push_back(5);
+        }
+        break;
+    case COAL:
+        for(int i=0; i<4; i++){
+            shiness.push_back(5);
+        }
+        break;
+    case IRONORE:
+        for(int i=0; i<4; i++){
+            shiness.push_back(5);
+        }
+        break;
+    default:
+        for(int i=0; i<4; i++){
+            shiness.push_back(1);
+        }
+        break;
+    }
+}
+
+void getBlockFaceType(blocktype btype, std::vector<float>& blockType){
+    if(btype == LAVA || btype == WATER){
+        for(int i=0; i<4; i++){
+            blockType.push_back(3.0);
+        }
+
+    }else{
+        for(int i=0; i<4; i++){
+           blockType.push_back(0.0);
+        }
+    }
+}
+
 void createCubeVertAttribute(std::vector<glm::vec4>& pos,std::vector<glm::vec4>& nor,std::vector<glm::vec4>& col,
-                        int i, int j, int k,bool negativeX, bool positiveX,
-                        bool negativeY, bool positiveY, bool negativeZ, bool positiveZ){
-    //Do not render right face if negativeX is true
+                        int i, int j, int k,bool negativeX, bool positiveX, bool negativeY, bool positiveY,
+                             bool negativeZ, bool positiveZ, std::vector<glm::vec2>& uv,
+                             blocktype btype, std::vector<float>& shiness, std::vector<float>& blockType){
+    //Do not render left face if negativeX is true
     if(!negativeX){
         pos.push_back(glm::vec4(i,j+1,k,1));
         pos.push_back(glm::vec4(i,j+1,k+1,1));
         pos.push_back(glm::vec4(i,j,k+1,1));
         pos.push_back(glm::vec4(i,j,k,1));
 
-        for(int i=0; i<4; i++){
+        for(int index=0; index<4; index++){
             nor.push_back(glm::vec4(-1,0,0,0));
             col.push_back(glm::vec4(0,1,0,1));
         }
+        //Yuxin MM02
+        getBlockFaceUV(btype,side,uv);
+        getBlockFaceShiness(btype, shiness);
+        getBlockFaceType(btype,blockType);
     }
-    //Left Face
-    if(!positiveX){
-        //Right Side Face
+    //Right Side Face
+    if(!positiveX){        
+        pos.push_back(glm::vec4(i+1,j+1,k+1,1));
         pos.push_back(glm::vec4(i+1,j+1,k,1));
         pos.push_back(glm::vec4(i+1,j,k,1));
         pos.push_back(glm::vec4(i+1,j,k+1,1));
-        pos.push_back(glm::vec4(i+1,j+1,k+1,1));
 
-        for(int i=0; i<4; i++){
+        for(int index=0; index<4; index++){
             nor.push_back(glm::vec4(1,0,0,0));
             col.push_back(glm::vec4(1,0,0,1));
         }
+        //Yuxin MM02
+        getBlockFaceUV(btype,side,uv);
+        getBlockFaceShiness(btype, shiness);
+        getBlockFaceType(btype,blockType);
     }
     //Bottom Face
     if(!negativeY){
+        pos.push_back(glm::vec4(i+1,j,k,1));
         pos.push_back(glm::vec4(i,j,k,1));
         pos.push_back(glm::vec4(i,j,k+1,1));
         pos.push_back(glm::vec4(i+1,j,k+1,1));
-        pos.push_back(glm::vec4(i+1,j,k,1));
 
-        for(int i=0; i<4; i++){
+        for(int index=0; index<4; index++){
             nor.push_back(glm::vec4(0,-1,0,0));
             col.push_back(glm::vec4(0,0,1,1));
         }
+
+        //Yuxin MM02
+        getBlockFaceUV(btype,bottom,uv);
+        getBlockFaceShiness(btype, shiness);
+        getBlockFaceType(btype,blockType);
     }
     //Top Face
     if(!positiveY){
-        pos.push_back(glm::vec4(i+1,j+1,k,1));
         pos.push_back(glm::vec4(i+1,j+1,k+1,1));
         pos.push_back(glm::vec4(i,j+1,k+1,1));
         pos.push_back(glm::vec4(i,j+1,k,1));
+        pos.push_back(glm::vec4(i+1,j+1,k,1));
 
-        for(int i=0; i<4; i++){
+        for(int index=0; index<4; index++){
             nor.push_back(glm::vec4(0,1,0,0));
             col.push_back(glm::vec4(1,1,0,1));
         }
+
+        //Yuxin MM02
+        getBlockFaceUV(btype,top,uv);
+        getBlockFaceShiness(btype, shiness);
+        getBlockFaceType(btype,blockType);
     }
     //Front Face
     if(!negativeZ){
-        pos.push_back(glm::vec4(i,j,k,1));
-        pos.push_back(glm::vec4(i+1,j,k,1));
         pos.push_back(glm::vec4(i+1,j+1,k,1));
         pos.push_back(glm::vec4(i,j+1,k,1));
+        pos.push_back(glm::vec4(i,j,k,1));
+        pos.push_back(glm::vec4(i+1,j,k,1));
 
-        for(int i=0; i<4; i++){
+        for(int index=0; index<4; index++){
             nor.push_back(glm::vec4(0,0,-1,0));
             col.push_back(glm::vec4(0,1,1,1));
         }
+        //Yuxin MM02
+        getBlockFaceUV(btype,side,uv);
+        getBlockFaceShiness(btype, shiness);
+        getBlockFaceType(btype,blockType);
     }
     //Back Face
     if(!positiveZ){
-        pos.push_back(glm::vec4(i,j,k+1,1));
-        pos.push_back(glm::vec4(i+1,j,k+1,1));
-        pos.push_back(glm::vec4(i+1,j+1,k+1,1));
         pos.push_back(glm::vec4(i,j+1,k+1,1));
+        pos.push_back(glm::vec4(i+1,j+1,k+1,1));
+        pos.push_back(glm::vec4(i+1,j,k+1,1));
+        pos.push_back(glm::vec4(i,j,k+1,1));
 
-        for(int i=0; i<4; i++){
+        for(int index=0; index<4; index++){
             nor.push_back(glm::vec4(0,0,1,0));
             col.push_back(glm::vec4(1,0,1,1));
         }
+        //Yuxin MM02
+        getBlockFaceUV(btype,side,uv);
+        getBlockFaceShiness(btype, shiness);
+        getBlockFaceType(btype,blockType);
     }
 
 }
 
 void createCube(std::vector<glm::vec4>& chunk_vert, int i, int j, int k, bool negativeX, bool positiveX,
-                bool negativeY, bool positiveY, bool negativeZ, bool positiveZ){
+                bool negativeY, bool positiveY, bool negativeZ, bool positiveZ, blocktype btype){
     //i,j,k represents the bottom left vert position
     std::vector<glm::vec4> pos;
     std::vector<glm::vec4> col;
     std::vector<glm::vec4> nor;
-    createCubeVertAttribute(pos,nor,col,i,j,k,negativeX,positiveX,negativeY,positiveY,negativeZ,positiveZ);
+    std::vector<glm::vec2> uv;
+    std::vector<float> blockType;
+    std::vector<float> shiness;
+    createCubeVertAttribute(pos,nor,col,i,j,k,negativeX,positiveX,negativeY,positiveY,negativeZ,positiveZ,
+                            uv,btype,shiness,blockType);
     for(unsigned int index = 0; index < pos.size(); index++){
-        //(V[0]V[1]V[2]V[3]N[0]N[1]N[2]N[3]C[0]C[1]C[2]C[3])
+        //(V[0]V[1]V[2]V[3]N[0]N[1]N[2]N[3]C[0]C[1]C[2]C[3]UV00blockType000shiness000)
         chunk_vert.push_back(pos[index]);
         chunk_vert.push_back(nor[index]);
         chunk_vert.push_back(col[index]);
+        chunk_vert.push_back(glm::vec4(uv[index][0],uv[index][1],0,0));
+        chunk_vert.push_back(glm::vec4(blockType[index],0,0,0));
+        chunk_vert.push_back(glm::vec4(shiness[index],0,0,0));
     }
 }
 
@@ -209,7 +417,7 @@ void createChunkVerts(std::vector<glm::vec4>& chunk_vert, std::vector<GLuint>& c
                         positiveZ = false;
                     }
                     createCube(chunk_vert, startPos[0]+i,startPos[1]+j,startPos[2]+k,negativeX,positiveX, negativeY,
-                            positiveY, negativeZ, positiveZ);
+                            positiveY, negativeZ, positiveZ,blocks[i][j][k].getBlockType());
                     //createCubeIndex(chunk_idx, chunk_vert.size()/12);
                 }
             }

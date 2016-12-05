@@ -38,7 +38,7 @@ MyGL::MyGL(QWidget *parent)
 
     std::tuple<int, int, int> startPos(0,0,0);
     for(int x=0; x<4; x++){
-        for(int y=0; y<4; y++){
+        for(int y=-8; y<4; y++){
             for(int z=0; z<4; z++){
                 startPos = std::tuple<int, int, int>(x*16,y*16,z*16);
                 createNewChunk(terrain.mapWorld,startPos);
@@ -91,6 +91,10 @@ void MyGL::initializeGL()
     // This makes your geometry render green.
     prog_lambert.setGeometryColor(glm::vec4(0,1,0,1));
 
+    //Yuxin MM02
+    prog_lambert.setUpTexture();
+    prog_lambert.setUpNormalMap();
+
     // We have to have a VAO bound in OpenGL 3.2 Core. But if we're not
     // using multiple VAOs, we can just bind one once.
 //    vao.bind();
@@ -134,13 +138,9 @@ void MyGL::updateChunkVBO(){
 //===========================Added By Yuxin===============================//
 void MyGL::updateChunkVisibility(){
     //get the player position, if the player is at the edge of the chunk
-    //std::cout<<"updateChunkVisibility() "<<glm::to_string(Tester.eye)<<std::endl;
-    //std::cout<<"x is: "<<int(round(Tester.eye[0]))%16<<std::endl;
     if(int(round(Tester.eye[0]))%16==0 || int(round(Tester.eye[2]))%16==0){
-        //std::cout<<"check visibility here"<<std::endl;
         chunkManager.checkVisibility(Tester.eye);
     }
-    //pass the player position to the chunkManager
 }
 
 //===========================Added By Yuxin===============================//
@@ -172,6 +172,11 @@ void MyGL::paintGL()
     prog_flat.setViewProjMatrix(gl_camera.getViewProj());
     prog_lambert.setViewProjMatrix(gl_camera.getViewProj());
 
+    //GLDrawScene();
+    //YuxinMM02 activate the Texture and Normal map before rendering world scene
+    prog_lambert.bindTexture0();
+    prog_lambert.bindNormalMap0();
+    prog_lambert.setEyePosition(Tester.eye);
     GLRenderWorld();
     prog_flat.setModelMatrix(glm::mat4(1.0));
     prog_flat.setViewProjMatrix(glm::mat4(1.0));
@@ -395,13 +400,23 @@ void MyGL::addBlock(int x, int y, int z){
 }
 void MyGL::timerUpdate()
 {
-        Tester.Falling();
+    timeCount++;
+    //pass this value to fragement shader to make water and lava shader moving
+    if(timeCount==128){
+        timeCount = 0;
+    }
+    if(timeCount%8==0){
+        prog_lambert.setTimeCount(timeCount/8);
         update();
-        Moving();
+    }
+    Tester.Falling();
+    update();
+    Moving();
 }
 void MyGL::NewChunk(){
     vector<tuple<int,int,int>>* NC= Tester.GetNewBlockVec();
     int total = NC->size();
+    if (total == 0) return;
     for (int i=0;i<total;++i)
         createNewChunk(terrain.mapWorld,(*NC)[i]);
     (*NC).clear();

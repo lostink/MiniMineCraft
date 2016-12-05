@@ -1,5 +1,5 @@
 #include "chunkmanager.h"
-//#include <iostream>
+#include <iostream>
 
 ChunkManager::ChunkManager()
 {
