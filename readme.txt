@@ -22,11 +22,11 @@ src\scene\inventory.cpp    简单的装备栏
 src\character.cpp          包括LSystem，玩家的控制，碰撞检测，放置/删除方块
 
 胡雨昕：
-scene\block.cpp
-scene\chunk.cpp
-scene\chunkmanager.cpp
-glsl\lambert.frag.glsl
-glsl\lambert.vert.glsl
+scene\block.cpp         单个方块的抽象类
+scene\chunk.cpp         16*16*16个方块组成的大块的抽象类
+scene\chunkmanager.cpp  管理总VBO/显示信息的抽象类
+glsl\lambert.frag.glsl  GLSL的fragment shader
+glsl\lambert.vert.glsl  GLSL的vertex shader
 
 共同维护文件：
 src\mygl.cpp
