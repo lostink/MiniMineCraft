@@ -10,7 +10,8 @@ MyGL::MyGL(QWidget *parent)
     : GLWidget277(parent),
       geom_cube(this),geom_Center(this),chunkManager(),
       prog_lambert(this), prog_flat(this),geom_Inventory(this),
-      gl_camera(),timeCount(0)
+      gl_camera(),timeCount(0),skyColor(glm::vec4(0, 0, 0, 1)),lightDir(glm::vec4(-1,0,1,0)),lightCol(glm::vec4(1,1,0,0)),
+      enableDayNightCycle(true)
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
     connect(&timer, SIGNAL(timeout()), this, SLOT(timerUpdate()));
@@ -27,8 +28,18 @@ MyGL::MyGL(QWidget *parent)
     setCursor(c);
     flag_amount_speed = 5.0 / 60.0;
     flag_moving_forward = 0;
+    flag_moving_backward = 0;
     flag_moving_right = 0;
+    flag_moving_left = 0;
+    flag_moving_up = 0;      //Test mode only
+    flag_moving_down = 0;    //Test mode only
     flag_rotate_right = 0;
+    flag_rotate_left = 0;
+    flag_rotate_up = 0;
+    flag_rotate_down = 0;
+    flag_rotate_right = 0;
+    WalkingStep = nullptr;
+    flag_walking = 0;
     //Test end.
     terrain.createInitialWorld();
 
@@ -37,16 +48,19 @@ MyGL::MyGL(QWidget *parent)
     Tester.SetManager(&chunkManager);
     Tester.SetTerrain(&terrain);
     Tester.setCenter(&geom_Center);
+    Tester.SetAudio(&audio);
 
     std::tuple<int, int, int> startPos(0,0,0);
     for(int x=0; x<4; x++){
         for(int y=-8; y<4; y++){
             for(int z=0; z<4; z++){
                 startPos = std::tuple<int, int, int>(x*16,y*16,z*16);
-                createNewChunk(terrain.mapWorld,startPos);
+                createNewChunk(terrain.mapWorld,startPos,terrain.mapBiome);
             }
         }
     }
+
+    //audio.playFootstep(PLAIN, 5);
 }
 
 MyGL::~MyGL()
@@ -73,7 +87,8 @@ void MyGL::initializeGL()
     // Set the size with which points should be rendered
     glPointSize(5);
     // Set the color with which the screen is filled at the start of each render call.
-    glClearColor(0.37f, 0.74f, 1.0f, 1);
+    //glClearColor(0.37f, 0.74f, 1.0f, 1);
+    //glClearColor(skyColor[0], skyColor[1], skyColor[2], skyColor[3]);
 
     printGLErrorLog();
 
@@ -98,20 +113,67 @@ void MyGL::initializeGL()
     //Yuxin MM02
     prog_lambert.setUpTexture();
     prog_lambert.setUpNormalMap();
+    //Yuxin MM03
+    prog_lambert.setUpGrayTexture();
+    //Yuxin MM03 Enable ALPHA channel
+    glEnable (GL_BLEND);
+    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // We have to have a VAO bound in OpenGL 3.2 Core. But if we're not
     // using multiple VAOs, we can just bind one once.
-//    vao.bind();
+    // vao.bind();
     glBindVertexArray(vao);
 
     scene.CreateTestScene();
 }
 
 //===========================Added By Yuxin===============================//
-void MyGL::createNewChunk(std::map<std::tuple<int, int, int>,blocktype>& blockInfo,std::tuple<int, int, int> startPos){
+void MyGL::createNewChunk(std::map<std::tuple<int, int, int>,blocktype>& blockInfo, std::tuple<int, int, int> startPos,
+                          std::map<std::pair<int, int>, biometype> &biomeInfo){
     Chunk* chunk = new Chunk(this);
-    chunk->createChunk(blockInfo,startPos);
-    chunk->setStartPos(glm::vec4(std::get<0>(startPos), std::get<1>(startPos), std::get<2>(startPos),1));
+    //Check neighboring chunk biome type
+    glm::vec4 chunkStartPos = glm::vec4(std::get<0>(startPos), std::get<1>(startPos), std::get<2>(startPos),1);
+    Chunk* neighborChunk = nullptr;
+    bool posXBiome=false;
+    bool negXBiome=false;
+    bool posZBiome=false;
+    bool negZBiome=false;
+    std::pair<int, int>biomeKey(chunkStartPos[0],chunkStartPos[2]);
+    biometype newbio = DESERT;
+    if(biomeInfo.find(biomeKey) !=biomeInfo.end()){
+        newbio = biomeInfo.at(biomeKey);
+    }
+    chunk->setChunkBiome(newbio);
+    //PositiveX
+    neighborChunk = chunkManager.getChunkByStartPos(chunkStartPos[0]+16,chunkStartPos[1],chunkStartPos[2]);
+    if(neighborChunk!=nullptr){
+        if(neighborChunk->getChunkBiome()!=newbio){
+            posXBiome = true;
+        }
+    }
+    //NegativeX
+    neighborChunk = chunkManager.getChunkByStartPos(chunkStartPos[0]-16,chunkStartPos[1],chunkStartPos[2]);
+    if(neighborChunk!=nullptr){
+        if(neighborChunk->getChunkBiome()!=newbio){
+            negXBiome = true;
+        }
+    }
+    //PositiveZ
+    neighborChunk = chunkManager.getChunkByStartPos(chunkStartPos[0],chunkStartPos[1],chunkStartPos[2]+16);
+    if(neighborChunk!=nullptr){
+        if(neighborChunk->getChunkBiome()!=newbio){
+            posZBiome = true;
+        }
+    }
+    //NegativeZ
+    neighborChunk = chunkManager.getChunkByStartPos(chunkStartPos[0],chunkStartPos[1],chunkStartPos[2]-16);
+    if(neighborChunk!=nullptr){
+        if(neighborChunk->getChunkBiome()!=newbio){
+            negZBiome = true;
+        }
+    }
+    chunk->createChunk(blockInfo,startPos,posXBiome,negXBiome,posZBiome,negZBiome);
+    chunk->setStartPos(chunkStartPos);
     chunkManager.createNewChunk(chunk);
 }
 //===========================Added By Yuxin===============================//
@@ -180,7 +242,16 @@ void MyGL::paintGL()
     //YuxinMM02 activate the Texture and Normal map before rendering world scene
     prog_lambert.bindTexture0();
     prog_lambert.bindNormalMap0();
+    prog_lambert.bindTexture1();
     prog_lambert.setEyePosition(Tester.eye);
+
+    //YuxinMM03 dynamically change sky color, light color and light direction based on time
+    prog_lambert.setLightDir(lightDir);
+    //std::cout<<"light direction is: "<<glm::to_string(lightDir)<<std::endl;
+    prog_lambert.setLightCol(lightCol);
+    glClearColor(skyColor[0],skyColor[1], skyColor[2], skyColor[3]);
+
+
     GLRenderWorld();
     prog_flat.setModelMatrix(glm::mat4(1.0));
     prog_flat.setViewProjMatrix(glm::mat4(1.0));
@@ -277,20 +348,24 @@ void MyGL::keyPressEvent(QKeyEvent *e)
 //        Tester.CheckTranslateAlongLook(amount);
 //        NewChunk();
         flag_moving_forward = 1;
+        walkBegin();
     } else if (e->key() == Qt::Key_S) {
 //        Tester.CheckTranslateAlongLook(-amount);
 //        NewChunk();
         flag_moving_backward = 1;
+        walkBegin();
     } else if (e->key() == Qt::Key_D) {
         //gl_camera.TranslateAlongRight(amount);
         //Tester.CheckTranslateAlongRight(amount);
         //NewChunk();
         flag_moving_right = 1;
+        walkBegin();
     } else if (e->key() == Qt::Key_A) {
 //        gl_camera.TranslateAlongRight(-amount);
 //        Tester.CheckTranslateAlongRight(-amount);
 //        NewChunk();
         flag_moving_left = 1;
+        walkBegin();
     } else if (e->key() == Qt::Key_Q) {
         if (Tester.DisableFlyingAndCollision == 1)
             flag_moving_down = 1;
@@ -308,12 +383,39 @@ void MyGL::keyPressEvent(QKeyEvent *e)
     }else if (e->key() == Qt::Key_F)
     {
         Tester.ChangeFlyingAndCollision();
+    }else if(e->key() == Qt::Key_C)
+    {
+        //Toggle day and night cycle switch
+        enableDayNightCycle = !enableDayNightCycle;
     }
     //tst end
     gl_camera.RecomputeAttributes();
     update();  // Calls paintGL, among other things
 }
 //Lostink insert code
+void MyGL::walkBegin(){
+     int yeye = Tester.eye[1]>0?int(Tester.eye[1]):int(Tester.eye[1]-1);
+    if ((flag_walking == 0) && (WalkingStep == nullptr))
+    {
+        printf("In!\n");
+        WalkingStep = audio.playFootstep(PLAIN,yeye);
+        flag_walking = 1;
+    }
+    else
+        if ((WalkingStep!=nullptr)&&(WalkingStep->isFinished()))
+        {
+            audio.playFootstep(PLAIN,yeye);
+        }
+}
+void MyGL::walkEnd()
+{
+    if ((WalkingStep!=nullptr) && (flag_walking == 1) && (!WalkingStep->isFinished()))
+    {
+        audio.stopPlay(WalkingStep);
+        WalkingStep = nullptr;
+        flag_walking = 0;
+    }
+}
 void MyGL::keyReleaseEvent(QKeyEvent *e)
 {
     if(e->key() == Qt::Key_Shift)
@@ -321,12 +423,16 @@ void MyGL::keyReleaseEvent(QKeyEvent *e)
         flag_amount_speed = 5.0 / 60.0;
     }else if (e->key() == Qt::Key_W){
         flag_moving_forward = 0;
+//        walkEnd();
     }else if (e->key() == Qt::Key_S) {
         flag_moving_backward = 0;
+//        walkEnd();
     } else if (e->key() == Qt::Key_D) {
         flag_moving_right = 0;
+//        walkEnd();
     } else if (e->key() == Qt::Key_A) {
         flag_moving_left = 0;
+//        walkEnd();
     } else if (e->key() == Qt::Key_Right) {
         flag_rotate_right = 0;
     } else if (e->key() == Qt::Key_Left) {
@@ -363,7 +469,7 @@ void MyGL::mouseMoveEvent(QMouseEvent *e)
 {
     //printf("Moving!\n");
     if (ShowMouse == false) return;
-    double speed = 20;
+    double speed = 40;
     QCursor c = cursor();
     QPoint Now = e->pos();
     float dx = Now.x() - (width() / 2);
@@ -418,20 +524,77 @@ void MyGL::deleteBlock(int x, int y, int z){
     chunkManager.deleteBlockAt(x, y, z);
 }
 
-void MyGL::addBlock(int x, int y, int z){
-    chunkManager.addBlockAt(x, y, z);
+void MyGL::addBlock(int x, int y, int z, blocktype bType){
+    chunkManager.addBlockAt(x, y, z,bType);
 }
 void MyGL::timerUpdate()
 {
     timeCount++;
     //pass this value to fragement shader to make water and lava shader moving
-    if(timeCount==128){
+    if(timeCount==2048){
         timeCount = 0;
     }
-    if(timeCount%8==0){
-        prog_lambert.setTimeCount(timeCount/8);
+    if(timeCount%4==0){
+        prog_lambert.setTimeCount(timeCount/4);
         update();
     }
+
+
+    //**********************Yuxin MM03 Day and Night Cycle************************//
+    //Press keyboard C to toggle day and night cycle switch
+    if(enableDayNightCycle){
+        if(timeCount%32==0){
+            //Change the sky color to simulate day and night cycle//
+            double x = 0.0;
+            x = timeCount*1.0/320;
+            if((x>=PI/2 && x<=2*PI/3) || (x>=4*PI/3 && x<=3*PI/2)){
+                //Sunrise and Sunset, red will dominant a little bit
+                skyColor[0] = 0.5;
+            }else{
+               skyColor[0] = 0.2*sin(x-PI/2);
+            }
+            skyColor[1] = 0.5*sin(x-PI/2)+0.24;
+            skyColor[2] = 0.42*sin(x-PI/2)+0.58;
+
+            //Change the light direction to simulate sun cycle//
+            double lightDirX = 0.0f;
+            double lightDirY = 0.0f;
+            if(x>=PI/2 && x<=3*PI/2){
+                lightDirX = -sin(x);
+                lightDirY = -cos(x);
+            }else{
+                lightDirX = -sin(x+PI);
+                lightDirY = -cos(x+PI);
+            }
+            lightDir[0] = lightDirX;
+            lightDir[1] = lightDirY;
+
+            //Change the light color to simulate day and night cycle//
+            if(x>=PI/2 && x<=3*PI/2){
+
+                if(x<=2*PI/3 || x>=4*PI/3){
+                    //Sunrise and Sunset, more red
+                    lightCol[0] = 0.7;
+                }else{
+                    lightCol[0] = 0.3*sin(x-PI/2)+0.6;
+                }
+                lightCol[1] = 0.3*sin(x-PI/2)+0.6;
+                lightCol[2] = 0.3*sin(x-PI/2)+0.6;
+            }else{
+                //Night constant dim moon light
+                lightCol[0] = 0.3;
+                lightCol[1] = 0.3;
+                lightCol[2] = 0.3;
+            }
+        }
+    }else{
+        skyColor = glm::vec4(0.37f, 0.74f, 1.0f, 1);
+        lightDir = glm::vec4(1,1,1,0);
+        lightCol = glm::vec4(1,1,1,0);
+    }
+    //************************Yuxin MM03 Day and Night Cycle************************//
+
+
     Tester.Falling();
     update();
     Moving();
@@ -441,6 +604,6 @@ void MyGL::NewChunk(){
     int total = NC->size();
     if (total == 0) return;
     for (int i=0;i<total;++i)
-        createNewChunk(terrain.mapWorld,(*NC)[i]);
+    createNewChunk(terrain.mapWorld,(*NC)[i],terrain.mapBiome);
     (*NC).clear();
 }

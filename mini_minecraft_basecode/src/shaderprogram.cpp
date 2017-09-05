@@ -7,10 +7,10 @@
 
 
 ShaderProgram::ShaderProgram(GLWidget277 *context)
-    : vertShader(), fragShader(), prog(),textureHandler(),invMapHandler(),
-      attrPos(-1), attrNor(-1), attrCol(-1),unifInv(-1),
+    : vertShader(), fragShader(), prog(),textureHandler(),normalmapHandler(),grayTextureHandler(),invMapHandler(),
+      attrPos(-1), attrNor(-1), attrCol(-1),
       unifModel(-1), unifModelInvTr(-1), unifViewProj(-1), unifColor(-1),unifSampler(-1),attrUv(-1),unifNormal(-1),
-      unifTime(-1),attrBlockType(-1),attrShiness(-1),context(context)
+      unifTime(-1),attrBlockType(-1),attrShiness(-1),unifLightDir(-1),unifGraySampler(-1),attrBiomeType(-1),context(context)
 {}
 
 void ShaderProgram::create(const char *vertfile, const char *fragfile)
@@ -81,6 +81,11 @@ void ShaderProgram::create(const char *vertfile, const char *fragfile)
     unifTime = context->glGetUniformLocation(prog, "u_Time");
     unifEye = context->glGetUniformLocation(prog, "eyePos");
 
+    //Yuxin MM03
+    attrBiomeType = context->glGetAttribLocation(prog, "vs_biomeType");
+    unifLightDir = context->glGetUniformLocation(prog, "u_LightDir");
+    unifLightCol = context->glGetUniformLocation(prog, "u_LightCol");
+    unifGraySampler = context->glGetUniformLocation(prog, "grayTextureSampler");
     //Jiahao MM03
     unifInv = context->glGetUniformLocation(prog, "InvSampler");
 }
@@ -165,6 +170,20 @@ void ShaderProgram::setEyePosition(glm::vec3 eyePos){
     }
 }
 
+void ShaderProgram::setLightDir(glm::vec4 lightDir){
+    useMe();
+    if(unifLightDir!=-1){
+        context->glUniform4fv(unifLightDir,1,&lightDir[0]);
+    }
+}
+
+void ShaderProgram::setLightCol(glm::vec4 lightCol){
+    useMe();
+    if(unifLightCol!=-1){
+        context->glUniform4fv(unifLightCol,1,&lightCol[0]);
+    }
+}
+
 //This function, as its name implies, uses the passed in GL widget
 void ShaderProgram::draw(Drawable &d)
 {
@@ -201,27 +220,31 @@ void ShaderProgram::draw(Drawable &d)
     //===================Added by Yuxin======================//
     if(attrPos != -1 && d.bindChunk()){
         context->glEnableVertexAttribArray(attrPos);
-        context->glVertexAttribPointer(attrPos,4,GL_FLOAT,false,6*sizeof(glm::vec4),(void*)0);
+        context->glVertexAttribPointer(attrPos,4,GL_FLOAT,false,7*sizeof(glm::vec4),(void*)0);
     }
     if(attrNor != -1 && d.bindChunk()){
         context->glEnableVertexAttribArray(attrNor);
-        context->glVertexAttribPointer(attrNor,4,GL_FLOAT,false,6*sizeof(glm::vec4),(void*)(sizeof(glm::vec4)));
+        context->glVertexAttribPointer(attrNor,4,GL_FLOAT,false,7*sizeof(glm::vec4),(void*)(sizeof(glm::vec4)));
     }
     if(attrCol !=-1 && d.bindChunk()){
         context->glEnableVertexAttribArray(attrCol);
-        context->glVertexAttribPointer(attrCol,4,GL_FLOAT,false,6*sizeof(glm::vec4),(void*)(sizeof(glm::vec4)*2));
+        context->glVertexAttribPointer(attrCol,4,GL_FLOAT,false,7*sizeof(glm::vec4),(void*)(sizeof(glm::vec4)*2));
     }
     if(attrUv !=-1 && d.bindChunk()){
         context->glEnableVertexAttribArray(attrUv);
-        context->glVertexAttribPointer(attrUv,2,GL_FLOAT,false,6*sizeof(glm::vec4),(void*)(sizeof(glm::vec4)*3));
+        context->glVertexAttribPointer(attrUv,2,GL_FLOAT,false,7*sizeof(glm::vec4),(void*)(sizeof(glm::vec4)*3));
     }
     if(attrBlockType!=-1 && d.bindChunk()){
         context->glEnableVertexAttribArray(attrBlockType);
-        context->glVertexAttribPointer(attrBlockType,1,GL_FLOAT,false,6*sizeof(glm::vec4), (void*)(sizeof(glm::vec4)*4));
+        context->glVertexAttribPointer(attrBlockType,1,GL_FLOAT,false,7*sizeof(glm::vec4), (void*)(sizeof(glm::vec4)*4));
     }
     if(attrShiness!=-1 && d.bindChunk()){
         context->glEnableVertexAttribArray(attrShiness);
-        context->glVertexAttribPointer(attrShiness,1,GL_FLOAT,false,6*sizeof(glm::vec4), (void*)(sizeof(glm::vec4)*5));
+        context->glVertexAttribPointer(attrShiness,1,GL_FLOAT,false,7*sizeof(glm::vec4), (void*)(sizeof(glm::vec4)*5));
+    }
+    if(attrBiomeType!=-1 && d.bindChunk()){
+        context->glEnableVertexAttribArray(attrBiomeType);
+        context->glVertexAttribPointer(attrBiomeType,1,GL_FLOAT,false,7*sizeof(glm::vec4), (void*)(sizeof(glm::vec4)*6));
     }
 
 
@@ -235,7 +258,8 @@ void ShaderProgram::draw(Drawable &d)
     if (attrCol != -1) context->glDisableVertexAttribArray(attrCol);
     if (attrUv != -1) context->glDisableVertexAttribArray(attrUv);
     if (attrBlockType !=-1) context->glDisableVertexAttribArray(attrBlockType);
-    if( attrShiness != -1) context->glDisableVertexAttribArray(attrShiness);
+    if (attrShiness != -1) context->glDisableVertexAttribArray(attrShiness);
+    if (attrBiomeType!=-1) context->glDisableVertexAttribArray(attrBiomeType);
 
     context->printGLErrorLog();
 }
@@ -336,9 +360,7 @@ void ShaderProgram::setUpTexture(){
     QDir currentDir = QDir::current();
     currentDir.cdUp();
     currentDir.cd("mini_minecraft_basecode/texturemap");
-    //std::cout<<"currentDir is: "<<currentDir.path().toStdString()<<std::endl;
     QString textureFile = currentDir.path()+"/minecraft_textures_all.png";
-    //std::cout<<"textureFile is: "<<textureFile.toStdString()<<std::endl;
     QByteArray inBytes;
     inBytes = textureFile.toUtf8();
     const char* fileName = inBytes.constData();
@@ -391,6 +413,41 @@ void ShaderProgram::setUpNormalMap(){
         context->glUniform1i(unifNormal, 1);
     }
 }
+
+//Yuxin MM03
+void ShaderProgram::bindTexture1(){
+    context->glActiveTexture(GL_TEXTURE2);
+    context->glBindTexture(GL_TEXTURE_2D, grayTextureHandler);
+}
+
+
+void ShaderProgram::setUpGrayTexture(){
+    useMe();
+
+    context->glGenTextures(1,&grayTextureHandler);
+    context->glActiveTexture(GL_TEXTURE2);
+    context->glBindTexture(GL_TEXTURE_2D,grayTextureHandler);
+
+    //Read in gray scale texture map image
+    int width, height;
+
+    QDir currentDir = QDir::current();
+    currentDir.cdUp();
+    currentDir.cd("mini_minecraft_basecode/texturemap");
+    QString textureFile = currentDir.path()+"/minecraft_textures_all_grey_grass.png";
+    QByteArray inBytes;
+    inBytes = textureFile.toUtf8();
+    const char* fileName = inBytes.constData();
+    unsigned char* image = SOIL_load_image(fileName,&width, &height, 0, SOIL_LOAD_RGBA);
+    printf("SOIL gray grass texture loading results: '%s'\n", SOIL_last_result());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE,image);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    if(unifGraySampler!=-1){
+        context->glUniform1i(unifGraySampler, 2);
+    }
+}
+
 //Jiahao MM03
 void ShaderProgram::bindTexture31()
 {
@@ -423,5 +480,4 @@ void ShaderProgram::setUpInventory(){
     if(unifInv!=-1){
         context->glUniform1i(unifInv, 31);
     }
-
 }

@@ -3,10 +3,12 @@
 #include <camera.h>
 #include <map>
 #include <tuple>
+#include <QSound>
 #include <proceduralterrain.h>
 #include <scene/chunkmanager.h>
 #include <scene/screencenter.h>
 #include <proceduralterrain.h>
+#include <audiomanager.h>
 #include <algorithm>
 using std::max;
 using std::map;
@@ -20,6 +22,7 @@ public:
     ChunkManager                      *Manager;
     ProceduralTerrain                 *terrain;
     screenCenter                      *screenLayer;
+    AudioManager                      *audioplayer;
     float velocity_down;//using to calculate velocity
     blocktype holding_type;//TODO:use enum to replace this.
     int holding_type_int;
@@ -28,13 +31,15 @@ public:
     vector<tuple<int,int,int>> NewBlockVec;
     vector<char> river_sentence_main,river_sentence_branch;
     map<tuple<int,int,int>,blocktype> River_main,River_branch;
+    map<pair<int,int>,bool>  ChunkExistance;
+    map<tuple<int,int,int>,blocktype> MAP_SAND;
 
     character();
     void SetMainCamera(Camera *input);
     void SetMesh(map<tuple<int,int,int>,blocktype> *input);
     void SetManager(ChunkManager* input);
     void SetTerrain(ProceduralTerrain* input);
-
+    void SetAudio(AudioManager* input);
     //Check if the character can move.
     //Attention: Camera should have 1.5 blocks height
     void RenewPlace(Camera* MainCamera);
@@ -60,6 +65,7 @@ public:
     void ParsingMain(glm::vec3 location,glm::vec3 direction,const vector<char>& sentence,int start,int end,int width);
     void ParsingBranch(glm::vec3 location,glm::vec3 direction,const vector<char>& sentence,int start,int end,int width);
     void DigToSky(int x,int y,int z);
+    void GenerateSand();
     //Holding part
     void holding_type_change(int delta);
     void setCenter(screenCenter* input);

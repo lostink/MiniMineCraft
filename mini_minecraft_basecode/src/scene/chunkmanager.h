@@ -1,6 +1,7 @@
 #ifndef CHUNKMANAGER_H
 #define CHUNKMANAGER_H
 #include <scene/chunk.h>
+#include <proceduralterrain.h>
 
 
 class ChunkManager
@@ -24,9 +25,11 @@ public:
     std::vector<Chunk*> getUpdatedChunks() const;
     void clearUpdatedChunks();
 
-    void addBlockAt(int x, int y, int z);
+    void addBlockAt(int x, int y, int z,blocktype bType);
 
     void checkVisibility(glm::vec3 playerPos);
+
+    Chunk* getChunkByStartPos(int x, int y, int z);
 };
 
 #endif // CHUNKMANAGER_H

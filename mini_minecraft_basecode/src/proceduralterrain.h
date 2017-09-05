@@ -6,12 +6,16 @@
 #include <iostream>
 
 using namespace std;
-enum blocktype{EMPTY = -1,DIRT = 0, GRASS = 1, LAVA = 2, STONE = 3, WOOD = 4, LEAF = 5, BEDROCK = 6, COAL = 7, IRONORE = 8, WATER = 9};
+enum blocktype{EMPTY = -1,DIRT = 0, GRASS = 1, LAVA = 2, STONE = 3, WOOD = 4, LEAF = 5, BEDROCK = 6, COAL = 7, IRONORE = 8, WATER = 9, SNOW = 10, SAND = 11};
+enum biometype{DESERT = 0, FOREST = 1, SWAMP = 2, PLAIN = 3, SNOWLAND = 4, MIX = 6};
+
 class ProceduralTerrain
 {
 public:
     map<tuple<int, int, int>, blocktype> mapWorld;
     map<tuple<int, int, int>, blocktype> mapCave;
+    map<pair<int, int>, biometype> mapBiome;
+    map<pair<int, int>, int> Block_Height;
     tuple<int, int, int> startPosition;
 
     ProceduralTerrain();
@@ -31,15 +35,20 @@ public:
     float PerlinNoise_3D_xz(float x,float y,float z);//3D Perlin Noise funtion ,return a radius
     float PerlinNoise_3D_y(float x,float y,float z);//Another 3D Perlin Noise funtion ,return a radius
 
+    float sinNoise(int x, int z);
+    void CreateInitialBiomeMap();
+
     void createInitialWorld();// Create the initial 64 * 64 * 64 World
     bool searchBlockAt(int x, int y, int z);// Search a block at a specific position
     void addBlockAt(int x, int y, int z);// Add a block at a specific position
     void deleteBlockAt(int x, int y, int z);// Delete a block at a specific position
     void addNewChunk(int x, int z);// Add a new chunk start from x, z
 
-    void CreateTunnel(int x,int y,int z,float radius);//Remove a bunch of blocks around (x,y,z)
-    void CreateEllipsoidcave(int x,int y,int z);
-    void CaveGenerator();//Generate caves after the terrain has generated
+    void CreateTunnel(int x,int y,int z,float radius);// Remove a bunch of blocks around (x,y,z)
+    void CreateEllipsoidcave(int x,int y,int z);// Create an ellipsoid-shaped cave of random XYZ scale
+    void CaveGenerator();// Generate caves after the terrain has generated
+
+
 };
 
 #endif // PROCEDURALTERRAIN_H

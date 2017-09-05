@@ -11,6 +11,7 @@
 #include <scene/chunkmanager.h>
 #include <scene/inventory.h>
 #include <proceduralterrain.h>
+#include <audiomanager.h>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLShaderProgram>
 //Code from lostink for testing character
@@ -32,9 +33,15 @@ private:
     ChunkManager chunkManager;
     ShaderProgram prog_lambert;// A shader program that uses lambertian reflection
     ShaderProgram prog_flat;// A shader program that uses "flat" reflection (no shadowing at all)
-    int timeCount; //Testing for update chunks
+    int timeCount; //For updating moving texture
+    //Yuxin MM03
+    glm::vec4 skyColor;
+    glm::vec4 lightDir;
+    glm::vec4 lightCol;
+    bool enableDayNightCycle;
 
     ProceduralTerrain terrain;
+    AudioManager audio;
 
     GLuint vao; // A handle for our vertex array object. This will store the VBOs created in our geometry classes.
                 // Don't worry too much about this. Just know it is necessary in order to render geometry.
@@ -60,15 +67,17 @@ public:
 
     //==============Added By Yuxin=============//
     void GLRenderWorld();
-    void createNewChunk(std::map<std::tuple<int, int, int>, blocktype> &blockInfo, std::tuple<int, int, int> startPos);
+    void createNewChunk(std::map<std::tuple<int, int, int>, blocktype> &blockInfo, std::tuple<int, int, int> startPos
+                        ,std::map<std::pair<int,int>, biometype> &biomeInfo);
     void updateChunkVBO();
     void updateChunkVisibility();
     void deleteBlock(int x, int y, int z);
-    void addBlock(int x, int y, int z);
+    void addBlock(int x, int y, int z, blocktype bType);
     void NewChunk();
 protected:
     void keyPressEvent(QKeyEvent *e);
     //Lostink insert code
+    QSound* WalkingStep;
     bool flag_moving_forward;
     bool flag_moving_backward;
     bool flag_moving_right;
@@ -79,11 +88,14 @@ protected:
     bool flag_rotate_left;
     bool flag_rotate_up;
     bool flag_rotate_down;
+    int flag_walking;
     float flag_amount_speed;
     void keyReleaseEvent(QKeyEvent *e);
     void mousePressEvent(QMouseEvent *e);
     void mouseMoveEvent(QMouseEvent *e);
     void wheelEvent(QWheelEvent *e);
+    void walkBegin();
+    void walkEnd();
     void Moving();
     //Insert End.
 private slots:

@@ -240,6 +240,24 @@ float ProceduralTerrain::PerlinNoise_3D_y(float x, float y,float z)
     result = (1 - angle) * 3.141592653589793f;
     return result;
 }
+
+float ProceduralTerrain::sinNoise(int x, int z)
+{
+    float result = (sin((x+z)/100.0))/2.0 + 0.5;
+    return result;
+}
+
+void ProceduralTerrain::CreateInitialBiomeMap()
+{
+    // Initial world
+    for(int x = 0; x < 64; x+=16)
+        for(int z = 0; z < 64; z+=16)
+        {
+            pair<int, int> biomePos(x, z);
+            mapBiome[biomePos] = DESERT;
+        }
+}
+
 // Create the initial 64 * 192 * 64 World
 void ProceduralTerrain::createInitialWorld()
 {
@@ -247,6 +265,7 @@ void ProceduralTerrain::createInitialWorld()
     // GRASS: y = ground surface
     // STONE: y from -127 to -1
     // BEDROCK: y = -128
+    /*
     int y;
     for(int x = 0; x < 64; ++x)
     {
@@ -269,6 +288,11 @@ void ProceduralTerrain::createInitialWorld()
             }
         }
     }
+    */
+    for (int i=0;i<4;++i)
+        for (int j=0;j<4;++j)
+            addNewChunk(i*16,j*16);
+    //CreateInitialBiomeMap();
     // Generate cave
     CaveGenerator();
 }
@@ -302,15 +326,75 @@ void ProceduralTerrain::deleteBlockAt(int x, int y, int z)
 }
 
 // Add a new chunk start from (x, z)
+void HeightGenerate(float &height,float value){
+    if (value <= 0.2)
+        height = 0.5;
+    else if (value >= 0.8)
+        height = 2;
+    else height = 1;
+}
 void ProceduralTerrain::addNewChunk(int x, int z)
 {
+    pair<int, int> biomePos(x, z);
+    float flag = sinNoise(x, z);
+    if(flag <= 0.2)
+        mapBiome.insert(pair<pair<int, int>, biometype>(biomePos, DESERT));
+    else if((flag > 0.2)&&(flag <= 0.4))
+        mapBiome.insert(pair<pair<int, int>, biometype>(biomePos, FOREST));
+    else if((flag > 0.4)&&(flag <= 0.6))
+        mapBiome.insert(pair<pair<int, int>, biometype>(biomePos, SWAMP));
+    else if(flag > 0.6)
+        mapBiome.insert(pair<pair<int, int>, biometype>(biomePos, PLAIN));
+
     int y;
+
+    biometype BIO_NOW = mapBiome[biomePos];
+    //First, find the height
     for(int i = 0; i < 16; ++i)
         for(int j = 0; j < 16; ++j)
         {
-            y = PerlinNoise_2D(1.0 * (x+i),1.0 * (z+j));
+            y = (PerlinNoise_2D(1.0 * (x+i),1.0 * (z+j)));
+            pair<int,int> block_x_z(x + i, z + j);
+            Block_Height[block_x_z] = y;
+        }
+    //Smooth edge. Especially for mountains
+        float x_left,x_right,z_left,z_right;
+        float flag_height_x_left  = sinNoise(x-16+z, x-16-z);
+        float flag_height_x_right = sinNoise(x+16+z, x+16-z);
+        float flag_height_z_left  = sinNoise(x+z-16, x-z+16);
+        float flag_height_z_right = sinNoise(x+z+16, x-z-16);
+        HeightGenerate(x_left ,flag_height_x_left);
+        HeightGenerate(x_right,flag_height_x_right);
+        HeightGenerate(z_left ,flag_height_z_left);
+        HeightGenerate(z_right,flag_height_z_right);
+
+        for(int i = 0; i < 16; ++i)
+            for(int j = 0; j < 16; ++j)
+            {
+                float real_times = ((i / 16.0) * x_right + (15 - i)/16.0 * x_left
+                                  +(j / 16.0) * z_right + (15 - j)/16.0 * z_left) / 2;
+                pair<int,int> block_x_z(x + i, z + j);
+                Block_Height[block_x_z] = Block_Height[block_x_z] * real_times;
+            }
+    //Finallt
+    for(int i = 0; i < 16; ++i)
+        for(int j = 0; j < 16; ++j)
+        {
+            //y = (PerlinNoise_2D(1.0 * (x+i),1.0 * (z+j)) * height_more);
+            pair<int,int> block_x_z(x + i, z + j);
+            y = Block_Height[block_x_z];
+
+
             tuple<int, int, int> positiongrass(x + i, y, z + j);
-            mapWorld.insert(pair<tuple<int, int, int>, blocktype>(positiongrass, GRASS));
+            if(BIO_NOW == DESERT)
+            {
+                mapWorld.insert(pair<tuple<int, int, int>, blocktype>(positiongrass, SAND));
+
+            }
+            else
+            {
+                mapWorld.insert(pair<tuple<int, int, int>, blocktype>(positiongrass, GRASS));
+            }
             tuple<int, int, int> positionbedrock(x + i, -128, z + j);
             mapWorld.insert(pair<tuple<int, int, int>, blocktype>(positionbedrock, BEDROCK));
             for(int k = -127; k < 0; ++k)
@@ -321,6 +405,7 @@ void ProceduralTerrain::addNewChunk(int x, int z)
                 {
                     if (it1->second == LAVA)
                         mapWorld.insert(pair<tuple<int, int, int>, blocktype>(position, LAVA));
+                    mapCave.erase(it1);
                 }
                 else
                     mapWorld.insert(pair<tuple<int, int, int>, blocktype>(position, STONE));
@@ -328,14 +413,19 @@ void ProceduralTerrain::addNewChunk(int x, int z)
             for(int k = 0; k < y; ++k)
             {
                 tuple<int, int, int> position(x + i , k, z + j);
-                map<tuple<int,int,int>,blocktype>::iterator it1= mapCave.find(position);
-                if (it1!=mapCave.end())
+                if(BIO_NOW == DESERT)
                 {
-                    if (it1->second == LAVA)
-                        mapWorld.insert(pair<tuple<int, int, int>, blocktype>(position, LAVA));
+                    mapWorld.insert(pair<tuple<int, int, int>, blocktype>(position, SAND));
                 }
                 else
+                {
                     mapWorld.insert(pair<tuple<int, int, int>, blocktype>(position, DIRT));
+                }
+            }
+            if (y>=30)
+            {
+                tuple<int, int, int> position(x + i, y +1, z + j);
+                mapWorld.insert(pair<tuple<int, int, int>, blocktype>(position, SNOW));
             }
         }
 
@@ -367,11 +457,11 @@ void ProceduralTerrain::CreateTunnel(int x, int y, int z, float radius)
                 if (it1!=mapWorld.end())
                 {
                     int rand_num = rand();
-                    if (rand_num % 5 == 4)
+                    if (rand_num % 20 == 4)
                     {
                         it1->second = COAL;
                     }
-                    else if (rand_num % 5 == 3)
+                    else if (rand_num % 20 == 3)
                     {
                         it1->second = IRONORE;
                     }
@@ -407,9 +497,10 @@ void ProceduralTerrain::CreateEllipsoidcave(int x, int y, int z)
                 if ((1.0 * i * i/(Scale_x * Scale_x) + 1.0 * j * j/(Scale_y * Scale_y) + 1.0 * k * k /(Scale_z * Scale_z)) > 1.1) continue;
                 tuple<int, int, int> CurrentBlock(x + i , y + k, z + j);
                 map<tuple<int,int,int>,blocktype>::iterator it1= mapWorld.find(CurrentBlock);
+                int number_rand = rand() % 20;
                 if (it1!=mapWorld.end())
                 {
-                    if ((rand() % 20) <= 2)
+                    if (number_rand <= 2)
                     for (int di = -1; di <= 1; ++ di)
                         for (int dj = -1; dj <= 1; ++ dj)
                         {
@@ -429,17 +520,25 @@ void ProceduralTerrain::CreateEllipsoidcave(int x, int y, int z)
                 if ((1.0 * i * i/(Scale_x * Scale_x) + 1.0 * j * j/(Scale_y * Scale_y) + 1.0 * k * k /(Scale_z * Scale_z)) > 1.5) continue;
                 tuple<int, int, int> position(x + i , y + k, z + j);
                 map<tuple<int,int,int>,blocktype>::iterator it1= mapWorld.find(position);
+                int rand_num = rand();
                 if (it1!=mapWorld.end())
                 {
-                    int rand_num = rand();
-                    if (rand_num % 5 == 4)
+                    if (rand_num % 18 == 4)
                     {
                         it1->second = COAL;
                     }
-                    else if (rand_num % 5 == 3)
+                    else if (rand_num % 18 == 3)
                     {
                         it1->second = IRONORE;
                     }
+                }
+                if (rand_num % 18 == 4)
+                {
+                    mapCave[position]= COAL;
+                }
+                else if (rand_num % 18 == 3)
+                {
+                    mapCave[position] = IRONORE;
                 }
             }
 }

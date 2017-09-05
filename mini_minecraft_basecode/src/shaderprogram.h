@@ -40,6 +40,13 @@ public:
     int attrShiness; //A handle for the "in" float representing the block shiness
     int unifEye; //A handle for the "uniform" vec4 representing the eye position in the world
 
+    //Yuxin MM03
+    int unifLightDir; //A handle for the "uniform" u_LightDir light direction in vertex shader
+    int unifLightCol; //A handle for the "uniform" u_LightCol light color in fragment shader
+    int unifGraySampler; //A handle for the "uniform" textureSampler representing the gray scale texture map in fragment shader
+    GLuint grayTextureHandler; //A handle for the gray scale texture map loaded for lambert shader
+    int attrBiomeType;//A handle for the "in" float representing the block biome type
+
 
     //Jiahao MM03
     int unifInv;
@@ -75,6 +82,11 @@ public:
     void setTimeCount(int timeCount);
     void setEyePosition(glm::vec3 eyePos);
 
+    //Yuxin MM03
+    void setLightDir(glm::vec4 lightDir);
+    void setLightCol(glm::vec4 lightCol);
+    void bindTexture1();
+    void setUpGrayTexture();
 
     //Jiahao MM03
     void bindTexture31();

@@ -11,7 +11,14 @@ character::character():WorldCamera(nullptr),mesh(nullptr),velocity_down(0),Manag
     ParsingBranch(glm::vec3(0,4,32),glm::vec3(-cos(0.1),0,sin(0.1)),river_sentence_branch,0,river_sentence_branch.size(),4);
     holding_type_int = 0;
     holding_type = DIRT;
+    GenerateSand();
     printf("River Generate Ends.");
+    for (int i=0;i<4;++i)
+        for (int j=0;j<4;++j)
+        {
+            pair<int,int> origin(i,j);
+            ChunkExistance[origin] = 1;
+        }
 }
 void character::SetMainCamera(Camera *input)
 {
@@ -33,9 +40,84 @@ void character::SetMesh(map<tuple<int, int, int>, blocktype> *input)
             {
                 DigToSky(fx,RIVER_HEIGHT,fz);
                 (*mesh)[River_block] = WATER;
+                tuple<int,int,int> Sand_block(fx,RIVER_HEIGHT-1,fz);
+                (*mesh)[Sand_block] = SAND;
             }
         }
     //Insert end.
+    for (int fx = 0;fx<64;++fx)
+        for (int fz = 0;fz<64;++fz)
+            for (int fy = 0;fy<64;++fy)
+            {
+                tuple<int,int,int> sand_block(fx,fy,fz);
+                if (MAP_SAND.find(sand_block)!=MAP_SAND.end())
+                {
+                    (*mesh)[sand_block] = SAND;
+                }
+            }
+}
+void character::GenerateSand()
+{
+    //Main:
+    map<tuple<int,int,int>,blocktype>::iterator it_main = River_main.begin();
+    while (it_main!=River_main.end())
+    {
+        tuple<int,int,int> now = it_main->first;
+        int nx = std::get<0>(now);
+        int ny = std::get<1>(now);
+        int nz = std::get<2>(now);
+        for (int dx = -1;dx<=1;++dx)
+            for (int dz = -1;dz<=1;++dz)
+            {
+                if (abs(dx)+abs(dz) != 0)
+                {
+                    tuple<int,int,int> near_block(nx + dx,ny,nz + dz);
+                    if (River_main.find(near_block) == River_main.end()){
+                        int flag_num = rand() % 20;
+                        if (flag_num == 4)
+                        {
+                            for (int sandx = -1;sandx<=1;++sandx)
+                                for (int sandy = -1;sandy<=1;++sandy)
+                                    for (int sandz = -1;sandz<=1;++sandz){
+                                         tuple<int,int,int> sand_block(nx + dx +sandx,ny+sandy,nz + dz+sandz);
+                                         MAP_SAND[sand_block] = SAND;
+                                    }
+                        }
+                    }
+                }
+            }
+        it_main++;
+    }
+    //Branch:
+    map<tuple<int,int,int>,blocktype>::iterator it_branch = River_branch.begin();
+    while (it_branch!=River_branch.end())
+    {
+        tuple<int,int,int> now = it_branch->first;
+        int nx = std::get<0>(now);
+        int ny = std::get<1>(now);
+        int nz = std::get<2>(now);
+        for (int dx = -1;dx<=1;++dx)
+            for (int dz = -1;dz<=1;++dz)
+            {
+                if (abs(dx)+abs(dz) != 0)
+                {
+                    tuple<int,int,int> near_block(nx + dx,ny,nz + dz);
+                    if (River_branch.find(near_block) == River_branch.end()){
+                        int flag_num = rand() % 20;
+                        if (flag_num == 4)
+                        {
+                            for (int sandx = -1;sandx<=1;++sandx)
+                                for (int sandy = -1;sandy<=1;++sandy)
+                                    for (int sandz = -1;sandz<=1;++sandz){
+                                         tuple<int,int,int> sand_block(nx + dx +sandx,ny+sandy,nz + dz+sandz);
+                                         MAP_SAND[sand_block] = SAND;
+                                    }
+                        }
+                    }
+                }
+            }
+        it_branch++;
+    }
 }
 void character::SetManager(ChunkManager *input)
 {
@@ -48,6 +130,10 @@ void character::SetTerrain(ProceduralTerrain *input)
 void character::setCenter(screenCenter *input)
 {
     screenLayer = input;
+}
+void character::SetAudio(AudioManager *input)
+{
+    audioplayer = input;
 }
 void character::RenewPlace(Camera *MainCamera){
     //Copy for this time.
@@ -273,6 +359,7 @@ void character::DeleteBlockLookAt()
     else
     {
         mesh->erase(it1);
+        audioplayer->playDamage();
         //TODO:
         //Tell chunk management to delete this
         Manager->deleteBlockAt(result[0],result[1],result[2]);
@@ -354,15 +441,12 @@ void character::AddBlockToLookAt()
             //Just in case something weird happend.
             //There should not happen if a intersetion point is behind the head of
             //player
-        //printf("%f\n",temp_d);
         if (temp_d < d){
             //if this face is more close
             //this face is the one we watch.
             d = temp_d;
             FacingNorm = Normals[i];
         }
-        //printf("FacingNorm:%lf %lf %lf\n\n", n[0], n[1], n[2]);
-
     }
     //Now we have the face that we are looking at.
     //we need to check if the position we want to place
@@ -386,14 +470,13 @@ void character::AddBlockToLookAt()
     if (((NewBlock[0] == eye_x)&&(NewBlock[1] == eye_y  )&&(NewBlock[2] == eye_z)) ||
        ((NewBlock[0] == eye_x)&&(NewBlock[1] == eye_y-1)&&(NewBlock[2] == eye_z)))
         return;//Body Intersection
-    //printf("%d %d %d\n\n========================\n",NewBlock[0],NewBlock[1],NewBlock[2]);
     tuple<int,int,int> NewAddingBlock(NewBlock[0],NewBlock[1],NewBlock[2]);
     (*mesh)[NewAddingBlock] = holding_type;
-    Manager->addBlockAt(NewBlock[0],NewBlock[1],NewBlock[2]);
+    audioplayer->playPlace();
+    Manager->addBlockAt(NewBlock[0],NewBlock[1],NewBlock[2],holding_type);
 }
 void character::RefreshBound()
 {
-    //printf("In!\n");
     NewBlockVec.clear();
     glm::ivec2 deltaBlock[8];
     deltaBlock[0] = glm::ivec2(-1,-1);
@@ -408,9 +491,9 @@ void character::RefreshBound()
     {
         int block_x = (((int)(eye[0]>=0?eye[0]:eye[0]-16)) / 16) + deltaBlock[i][0];
         int block_z = (((int)(eye[2]>=0?eye[2]:eye[2]-16)) / 16) + deltaBlock[i][1];
-        tuple<int,int,int> target(block_x * 16,-128,block_z * 16);
-        map<tuple<int,int,int>,blocktype>::iterator it1= mesh->find(target);
-        if (it1 == mesh->end())
+        pair<int,int> def(block_x,block_z);
+        map<pair<int,int>,bool>::iterator it_chunk = ChunkExistance.find(def);
+        if (it_chunk==ChunkExistance.end())
         {
             terrain->addNewChunk(block_x * 16,block_z * 16);
             //Here insert my river block
@@ -424,15 +507,51 @@ void character::RefreshBound()
                     {
                         DigToSky(block_x * 16+fx,RIVER_HEIGHT,block_z*16+fz);
                         (*mesh)[River_block] = WATER;
+                        tuple<int,int,int> Sand_block(block_x * 16+fx,RIVER_HEIGHT-1,block_z*16+fz);
+                        (*mesh)[Sand_block] = SAND;
+
                     }
                 }
             //Insert end.
-            for (int j=-8;j<4;++j){
-                tuple<int,int,int> startPos(block_x * 16,j*16,block_z * 16);
-                NewBlockVec.push_back(startPos);
+            //Here is sand
+            for (int fx = 0;fx<16;++fx)
+                for (int fz = 0;fz<16;++fz)
+                    for (int fy = -1;fy<5;++fy)
+                    {
+                        tuple<int,int,int> sand_block(block_x * 16+fx,fy,block_z*16+fz);
+                        if (MAP_SAND.find(sand_block)!=MAP_SAND.end())
+                        {
+                            (*mesh)[sand_block] = SAND;
+                        }
+                    }
+            //Sand End.
+            pair<int,int> def(block_x,block_z);
+            map<pair<int,int>,bool>::iterator it_chunk = ChunkExistance.find(def);
+            if (it_chunk==ChunkExistance.end())
+            {
+                ChunkExistance[def] = true;
+                for (int j=-8;j<4;++j){
+                    tuple<int,int,int> startPos(block_x * 16,j*16,block_z * 16);
+                    NewBlockVec.push_back(startPos);
+                }
             }
         }
     }
+    for (int dx = -5;dx <=5;++dx)
+        for (int dz = -5;dz<=5;++dz)
+        {
+            int block_x = (((int)(eye[0]>=0?eye[0]:eye[0]-1)));
+            int block_z = (((int)(eye[2]>=0?eye[2]:eye[2]-1)));
+            tuple<int,int,int> River_block(block_x+dx,RIVER_HEIGHT,block_z+dz);
+            map<tuple<int,int,int>,blocktype>::iterator it_river = River_main.find(River_block);
+            map<tuple<int,int,int>,blocktype>::iterator it_river_branchj = River_branch.find(River_block);
+            if (it_river!=River_main.end() || it_river_branchj!=River_branch.end())
+            {
+                QSound* river = audioplayer->playWater();
+                if (river->isFinished())
+                    river->play();
+            }
+        }
 }
 void character::ChangeFlyingAndCollision()
 {
@@ -450,20 +569,29 @@ void character::DigToSky(int x, int y, int z){
         {
             int height = max(abs(i),abs(j));
             bool grass_flag = 1;
-            for (int tempy = y + height*3 ;tempy < 64;++tempy)
-            {
-                tuple<int,int,int> check(x+i,tempy,z+j);
-                map<tuple<int,int,int>,blocktype>::iterator it1= mesh->find(check);
-                if (it1!=mesh->end())
+                for (int tempy = y + height*3 ;tempy < 64;++tempy)
                 {
-                    if (grass_flag){
-                        (*mesh)[check] = GRASS;
-                        grass_flag = 0;
+                    tuple<int,int,int> check(x+i,tempy,z+j);
+                    tuple<int,int,int> check2(x+i,tempy,z+j);
+                    map<tuple<int,int,int>,blocktype>::iterator it1= mesh->find(check);
+                    map<tuple<int,int,int>,blocktype>::iterator it2= mesh->find(check2);
+                    if (it1!=mesh->end())
+                    {
+                        if (grass_flag){
+                            if (it2->second!=SAND)
+                                (*mesh)[check] = GRASS;
+                            else
+                                mesh->erase(it1);
+                            grass_flag = 0;
+                        }
+                        else
+                        {
+                            mesh->erase(it1);
+                        }
                     }
                     else
-                        mesh->erase(it1);
+                        break;
                 }
-            }
         }
 }
 void character::ParsingMain(glm::vec3 location, glm::vec3 direction,const vector<char>&sentence, int start, int end, int width)
@@ -489,7 +617,6 @@ void character::ParsingMain(glm::vec3 location, glm::vec3 direction,const vector
             {
                 if (abs(dx) + abs(dz)<= width)
                 {
-//                    printf("%d %d %d\n",x+dx,y,z+dz);
                     tuple<int ,int , int> current(x + dx,RIVER_HEIGHT,z + dz);
                     River_main[current] = WATER;
                 }
@@ -500,7 +627,7 @@ void character::ParsingMain(glm::vec3 location, glm::vec3 direction,const vector
     {
         ParsingMain(location + direction,direction,sentence,start+1,end,width);
 
-        if (rand() % 20 == 2)
+        if (rand() % 20 <= 3)
         {
             glm::vec3 direction_ori(direction);
             float flag = (rand() % 2 == 1)?1:-1;
@@ -519,7 +646,6 @@ void character::ParsingMain(glm::vec3 location, glm::vec3 direction,const vector
                     {
                         if (abs(dx) + abs(dz)<= width)
                         {
-        //                    printf("%d %d %d\n",x+dx,y,z+dz);
                             tuple<int ,int , int> current(x + dx,RIVER_HEIGHT,z + dz);
                             River_branch[current] = WATER;
                         }
@@ -536,7 +662,6 @@ void character::ParsingBranch(glm::vec3 location, glm::vec3 direction,const vect
         width+=rand() % 5 <=3?1:0;
     if (start >= end) return;
     if (width <= 0) return;
-//    printf("%c\n",sentence[start]);
 
     if (sentence[start] == 'A')
     {
@@ -550,7 +675,6 @@ void character::ParsingBranch(glm::vec3 location, glm::vec3 direction,const vect
                 {
                     if (abs(dx) + abs(dz)<= width)
                     {
-    //                    printf("%d %d %d\n",x+dx,y,z+dz);
                         tuple<int ,int , int> current(x + dx,RIVER_HEIGHT,z + dz);
                         River_branch[current] = WATER;
                     }
@@ -659,10 +783,10 @@ void character::holding_type_change(int delta)
         holding_type = GRASS;
         break;
     case 2:
-        holding_type = LAVA;
+        holding_type = STONE;
         break;
     case 3:
-        holding_type = STONE;
+        holding_type = LAVA;
         break;
     case 4:
         holding_type = WOOD;

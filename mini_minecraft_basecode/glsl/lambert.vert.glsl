@@ -31,10 +31,14 @@ in vec4 vs_Col;             // The array of vertex colors passed to the shader.
 
 //Yuxin MM02
 uniform int u_Time;         //Used to animate the water and lava texture
-in vec2 vs_uv;              // The array of vertex uvs passed to the shader.
-in float vs_blockType;      // The block type indicating if the uv should be animated
-in float vs_shiness;           // The shiness of the block
+in vec2 vs_uv;              //The array of vertex uvs passed to the shader.
+in float vs_blockType;      //The block type indicating if the uv should be animated
+in float vs_shiness;        //The shiness of the block
 
+//Yuxin MM03
+in float vs_biomeType;    //Used to color grass based on biome type
+
+//Yuxin MM01
 out vec4 fs_Nor;            // The array of normals that has been transformed by u_ModelInvTr. This is implicitly passed to the fragment shader.
 out vec4 fs_LightVec;       // The direction in which our virtual light lies, relative to each vertex. This is implicitly passed to the fragment shader.
 out vec4 fs_Col;            // The color of each vertex. This is implicitly passed to the fragment shader.
@@ -44,10 +48,14 @@ out vec2 fs_uv;            //The uv of each vertex
 out vec4 fs_tangent;       //vertex local tangent vector
 out vec4 fs_bitangent;     //vertex local bitangent vector
 out vec4 fs_view;          //vector from eye to the vertex
-
 out float fs_shiness;
 
-const vec4 lightDir = vec4(1,1,1,0);  // The direction of our virtual light, which is used to compute the shading of
+//Yuxin MM03
+out float fs_blockType; // The block type passed to fragment shader to change the grass color
+out float fs_biomeType; // The biome type passed to fragment shader to change the grass color
+
+//Yuxin MM03
+uniform vec4 u_LightDir;  // The direction of our virtual light, which is used to compute the shading of
                                         // the geometry in the fragment shader.
 
 void main()
@@ -89,12 +97,15 @@ void main()
 
     vec4 modelposition = u_Model * vs_Pos;   // Temporarily store the transformed vertex positions for use below
 
-    fs_LightVec = (lightDir);  // Compute the direction in which the light source lies
+    fs_LightVec = (u_LightDir);  // Compute the direction in which the light source lies
 
     //YuxinMM02
     fs_view = vec4(eyePos[0],eyePos[1],eyePos[2],1)-modelposition;
     fs_shiness = vs_shiness;
 
+    //YuxinMM03
+    fs_blockType = vs_blockType;
+    fs_biomeType = vs_biomeType;
     gl_Position = u_ViewProj * modelposition;// gl_Position is a built-in variable of OpenGL which is
                                              // used to render the final positions of the geometry's vertices
 }

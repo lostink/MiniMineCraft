@@ -20,3 +20,11 @@ blocktype Block::getBlockType(){
 void Block::setBlockType(blocktype type){
     btype = type;
 }
+
+biometype Block::getBiomType(){
+    return biomeType;
+}
+
+void Block::setBiomeType(biometype biome){
+    biomeType = biome;
+}

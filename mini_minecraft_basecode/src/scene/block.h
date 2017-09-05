@@ -9,6 +9,7 @@ class Block
 private:
     bool active;
     blocktype btype;
+    biometype biomeType;
 
 public:
     Block();
@@ -16,6 +17,8 @@ public:
     void setBlockActive(bool blockActive);
     blocktype getBlockType();
     void setBlockType(blocktype type);
+    biometype getBiomType();
+    void setBiomeType(biometype biome);
 };
 
 #endif // BLOCK_H

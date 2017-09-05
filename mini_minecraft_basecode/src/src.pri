@@ -21,6 +21,7 @@ SOURCES += \
     $$PWD/scene/chunkmanager.cpp \
     $$PWD/proceduralterrain.cpp \
     $$PWD/character.cpp \
+    $$PWD/audiomanager.cpp \
     $$PWD/scene/inventory.cpp
 
 HEADERS += \
@@ -42,4 +43,5 @@ HEADERS += \
     $$PWD/scene/chunkmanager.h \
     $$PWD/proceduralterrain.h \
     $$PWD/character.h \
+    $$PWD/audiomanager.h \
     $$PWD/scene/inventory.h

@@ -6,6 +6,7 @@ CONFIG += console
 CONFIG += c++11
 CONFIG += warn_on
 CONFIG += debug
+QT += multimedia
 
 INCLUDEPATH += include
 

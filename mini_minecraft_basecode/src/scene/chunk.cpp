@@ -13,7 +13,9 @@ void Chunk::setStartPos(glm::vec4 start){
     startPos = start;
 }
 
-void Chunk::createChunk(std::map<std::tuple<int, int, int>,blocktype> &blockInfo, std::tuple<int, int, int> startPos){
+void Chunk::createChunk(std::map<std::tuple<int, int, int>,blocktype> &blockInfo,
+                        std::tuple<int, int, int> startPos,
+                        bool PosXBiome, bool NegXBiome, bool PosZBiome, bool NegZBiome){
     //Pop in all blocks in chunk
     //Question better to use Array?? Since it takes 3 iterations to initialize blocks
     for(int i=0; i<CHUNK_SIZE;i++){
@@ -37,6 +39,14 @@ void Chunk::createChunk(std::map<std::tuple<int, int, int>,blocktype> &blockInfo
     int startY = std::get<1>(startPos);
     int startZ = std::get<2>(startPos);
 
+    //Yuxin MM03 set Biome type for each block to render procedual grass color
+    /*std::pair<int, int>biomeKey(startX,startZ);
+    biometype bio = DESERT;
+    if(biomeInfo.find(biomeKey) !=biomeInfo.end()){
+        bio = biomeInfo.at(biomeKey);
+    }
+    setChunkBiome(bio);*/
+
     for(int x = startX; x< startX+CHUNK_SIZE; x++){
         for(int y=startY; y<startY+CHUNK_SIZE;y++){
             for(int z = startZ; z<startZ+CHUNK_SIZE;z++){
@@ -44,8 +54,23 @@ void Chunk::createChunk(std::map<std::tuple<int, int, int>,blocktype> &blockInfo
                 //If this block exists in the terrain
                 if (blockInfo.find(key) != blockInfo.end()){
                     blocks[x-startX][y-startY][z-startZ].setBlockActive(true);
-                    //Yuxin MM2
+                    //Yuxin MM02
                     blocks[x-startX][y-startY][z-startZ].setBlockType(blockInfo.at(key));
+                    //Yuxin MM03
+                    //Edge of chunk, use average biome
+                    if(x==startX && NegXBiome){
+                       blocks[x-startX][y-startY][z-startZ].setBiomeType(MIX);
+                    }else if(x==startX+CHUNK_SIZE-1 && PosXBiome){
+                       blocks[x-startX][y-startY][z-startZ].setBiomeType(MIX);
+                    }else if(z==startZ && NegZBiome){
+                       blocks[x-startX][y-startY][z-startZ].setBiomeType(MIX);
+                    }else if(z==startZ+CHUNK_SIZE-1 && PosZBiome){
+                       blocks[x-startX][y-startY][z-startZ].setBiomeType(MIX);
+                    }
+                    else{
+                        blocks[x-startX][y-startY][z-startZ].setBiomeType(chunkBiome);
+                    }
+
                 }
             }
         }
@@ -80,11 +105,12 @@ void getBlockFaceUV(blocktype btype, facetype ftype, std::vector<glm::vec2>& uv)
         break;
     case GRASS:
        // Add code here
+        //Use the gray texture image coordinates
         if(ftype == side){
-            uv.push_back(glm::vec2(3.0/16,0));
-            uv.push_back(glm::vec2(4.0/16,0));
-            uv.push_back(glm::vec2(4.0/16,1.0/16));
-            uv.push_back(glm::vec2(3.0/16,1.0/16));
+            uv.push_back(glm::vec2(6.0/16,2.0/16));
+            uv.push_back(glm::vec2(7.0/16,2.0/16));
+            uv.push_back(glm::vec2(7.0/16,3.0/16));
+            uv.push_back(glm::vec2(6.0/16,3.0/16));
         }
         if(ftype == top){
             uv.push_back(glm::vec2(8.0/16,2.0/16));
@@ -114,10 +140,24 @@ void getBlockFaceUV(blocktype btype, facetype ftype, std::vector<glm::vec2>& uv)
         uv.push_back(glm::vec2(13.0/16,13.0/16));
         break;
     case WOOD:
-        uv.push_back(glm::vec2(4.0/16,1.0/16));
-        uv.push_back(glm::vec2(5.0/16,1.0/16));
-        uv.push_back(glm::vec2(5.0/16,2.0/16));
-        uv.push_back(glm::vec2(4.0/16,2.0/16));
+        if(ftype == side){
+            uv.push_back(glm::vec2(4.0/16,1.0/16));
+            uv.push_back(glm::vec2(5.0/16,1.0/16));
+            uv.push_back(glm::vec2(5.0/16,2.0/16));
+            uv.push_back(glm::vec2(4.0/16,2.0/16));
+        }
+        if(ftype == top){
+            uv.push_back(glm::vec2(5.0/16,1.0/16));
+            uv.push_back(glm::vec2(6.0/16,1.0/16));
+            uv.push_back(glm::vec2(6.0/16,2.0/16));
+            uv.push_back(glm::vec2(5.0/16,2.0/16));
+        }
+        if(ftype == bottom){
+            uv.push_back(glm::vec2(5.0/16,1.0/16));
+            uv.push_back(glm::vec2(6.0/16,1.0/16));
+            uv.push_back(glm::vec2(6.0/16,2.0/16));
+            uv.push_back(glm::vec2(5.0/16,2.0/16));
+        }
         break;
     case LEAF:
         uv.push_back(glm::vec2(5.0/16,3.0/16));
@@ -148,6 +188,18 @@ void getBlockFaceUV(blocktype btype, facetype ftype, std::vector<glm::vec2>& uv)
         uv.push_back(glm::vec2(2.0/16,2.0/16));
         uv.push_back(glm::vec2(2.0/16,3.0/16));
         uv.push_back(glm::vec2(1.0/16,3.0/16));
+        break;
+    case SAND:
+        uv.push_back(glm::vec2(2.0/16,1.0/16));
+        uv.push_back(glm::vec2(3.0/16,1.0/16));
+        uv.push_back(glm::vec2(3.0/16,2.0/16));
+        uv.push_back(glm::vec2(2.0/16,2.0/16));
+        break;
+    case SNOW:
+        uv.push_back(glm::vec2(2.0/16,4.0/16));
+        uv.push_back(glm::vec2(3.0/16,4.0/16));
+        uv.push_back(glm::vec2(3.0/16,5.0/16));
+        uv.push_back(glm::vec2(2.0/16,5.0/16));
         break;
     default:
         uv.push_back(glm::vec2(0.0/16,0.0/16));
@@ -212,6 +264,16 @@ void getBlockFaceShiness(blocktype btype, std::vector<float>& shiness){
             shiness.push_back(5);
         }
         break;
+    case SAND:
+        for(int i=0; i<4; i++){
+            shiness.push_back(4);
+        }
+        break;
+    case SNOW:
+        for(int i=0; i<4; i++){
+            shiness.push_back(3);
+        }
+        break;
     default:
         for(int i=0; i<4; i++){
             shiness.push_back(1);
@@ -226,7 +288,12 @@ void getBlockFaceType(blocktype btype, std::vector<float>& blockType){
             blockType.push_back(3.0);
         }
 
-    }else{
+    }else if(btype == GRASS){
+        for(int i=0; i<4; i++){
+            blockType.push_back(2.0);
+        }
+    }
+    else{
         for(int i=0; i<4; i++){
            blockType.push_back(0.0);
         }
@@ -236,7 +303,8 @@ void getBlockFaceType(blocktype btype, std::vector<float>& blockType){
 void createCubeVertAttribute(std::vector<glm::vec4>& pos,std::vector<glm::vec4>& nor,std::vector<glm::vec4>& col,
                         int i, int j, int k,bool negativeX, bool positiveX, bool negativeY, bool positiveY,
                              bool negativeZ, bool positiveZ, std::vector<glm::vec2>& uv,
-                             blocktype btype, std::vector<float>& shiness, std::vector<float>& blockType){
+                             blocktype btype, std::vector<float>& shiness, std::vector<float>& blockType,int biome,
+                             std::vector<int>& biomeType){
     //Do not render left face if negativeX is true
     if(!negativeX){
         pos.push_back(glm::vec4(i,j+1,k,1));
@@ -247,6 +315,7 @@ void createCubeVertAttribute(std::vector<glm::vec4>& pos,std::vector<glm::vec4>&
         for(int index=0; index<4; index++){
             nor.push_back(glm::vec4(-1,0,0,0));
             col.push_back(glm::vec4(0,1,0,1));
+            biomeType.push_back(biome);
         }
         //Yuxin MM02
         getBlockFaceUV(btype,side,uv);
@@ -263,6 +332,7 @@ void createCubeVertAttribute(std::vector<glm::vec4>& pos,std::vector<glm::vec4>&
         for(int index=0; index<4; index++){
             nor.push_back(glm::vec4(1,0,0,0));
             col.push_back(glm::vec4(1,0,0,1));
+            biomeType.push_back(biome);
         }
         //Yuxin MM02
         getBlockFaceUV(btype,side,uv);
@@ -279,6 +349,7 @@ void createCubeVertAttribute(std::vector<glm::vec4>& pos,std::vector<glm::vec4>&
         for(int index=0; index<4; index++){
             nor.push_back(glm::vec4(0,-1,0,0));
             col.push_back(glm::vec4(0,0,1,1));
+            biomeType.push_back(biome);
         }
 
         //Yuxin MM02
@@ -296,6 +367,7 @@ void createCubeVertAttribute(std::vector<glm::vec4>& pos,std::vector<glm::vec4>&
         for(int index=0; index<4; index++){
             nor.push_back(glm::vec4(0,1,0,0));
             col.push_back(glm::vec4(1,1,0,1));
+            biomeType.push_back(biome);
         }
 
         //Yuxin MM02
@@ -313,6 +385,7 @@ void createCubeVertAttribute(std::vector<glm::vec4>& pos,std::vector<glm::vec4>&
         for(int index=0; index<4; index++){
             nor.push_back(glm::vec4(0,0,-1,0));
             col.push_back(glm::vec4(0,1,1,1));
+            biomeType.push_back(biome);
         }
         //Yuxin MM02
         getBlockFaceUV(btype,side,uv);
@@ -329,6 +402,7 @@ void createCubeVertAttribute(std::vector<glm::vec4>& pos,std::vector<glm::vec4>&
         for(int index=0; index<4; index++){
             nor.push_back(glm::vec4(0,0,1,0));
             col.push_back(glm::vec4(1,0,1,1));
+            biomeType.push_back(biome);
         }
         //Yuxin MM02
         getBlockFaceUV(btype,side,uv);
@@ -339,7 +413,7 @@ void createCubeVertAttribute(std::vector<glm::vec4>& pos,std::vector<glm::vec4>&
 }
 
 void createCube(std::vector<glm::vec4>& chunk_vert, int i, int j, int k, bool negativeX, bool positiveX,
-                bool negativeY, bool positiveY, bool negativeZ, bool positiveZ, blocktype btype){
+                bool negativeY, bool positiveY, bool negativeZ, bool positiveZ, blocktype btype, int biome){
     //i,j,k represents the bottom left vert position
     std::vector<glm::vec4> pos;
     std::vector<glm::vec4> col;
@@ -347,16 +421,18 @@ void createCube(std::vector<glm::vec4>& chunk_vert, int i, int j, int k, bool ne
     std::vector<glm::vec2> uv;
     std::vector<float> blockType;
     std::vector<float> shiness;
+    std::vector<int> biomeType;
     createCubeVertAttribute(pos,nor,col,i,j,k,negativeX,positiveX,negativeY,positiveY,negativeZ,positiveZ,
-                            uv,btype,shiness,blockType);
+                            uv,btype,shiness,blockType,biome,biomeType);
     for(unsigned int index = 0; index < pos.size(); index++){
-        //(V[0]V[1]V[2]V[3]N[0]N[1]N[2]N[3]C[0]C[1]C[2]C[3]UV00blockType000shiness000)
+        //(V[0]V[1]V[2]V[3]N[0]N[1]N[2]N[3]C[0]C[1]C[2]C[3]UV00blockType000shiness000biomeType000)
         chunk_vert.push_back(pos[index]);
         chunk_vert.push_back(nor[index]);
         chunk_vert.push_back(col[index]);
         chunk_vert.push_back(glm::vec4(uv[index][0],uv[index][1],0,0));
         chunk_vert.push_back(glm::vec4(blockType[index],0,0,0));
         chunk_vert.push_back(glm::vec4(shiness[index],0,0,0));
+        chunk_vert.push_back(glm::vec4(biomeType[index],0,0,0));
     }
 }
 
@@ -417,7 +493,7 @@ void createChunkVerts(std::vector<glm::vec4>& chunk_vert, std::vector<GLuint>& c
                         positiveZ = false;
                     }
                     createCube(chunk_vert, startPos[0]+i,startPos[1]+j,startPos[2]+k,negativeX,positiveX, negativeY,
-                            positiveY, negativeZ, positiveZ,blocks[i][j][k].getBlockType());
+                            positiveY, negativeZ, positiveZ,blocks[i][j][k].getBlockType(),blocks[i][j][k].getBiomType());
                     //createCubeIndex(chunk_idx, chunk_vert.size()/12);
                 }
             }
@@ -470,6 +546,16 @@ void Chunk::deleteBlockAt(int x, int y, int z){
     blocks[x][y][z].setBlockActive(false);
 }
 
-void Chunk::addBlockAt(int x, int y, int z){
+void Chunk::addBlockAt(int x, int y, int z, blocktype bType){
     blocks[x][y][z].setBlockActive(true);
+    blocks[x][y][z].setBlockType(bType);
+    blocks[x][y][z].setBiomeType(chunkBiome);
+}
+
+void Chunk::setChunkBiome(biometype biomeType){
+    chunkBiome = biomeType;
+}
+
+biometype Chunk::getChunkBiome(){
+    return chunkBiome;
 }
