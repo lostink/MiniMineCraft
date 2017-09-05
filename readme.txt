@@ -19,7 +19,7 @@ src\audiomanager.cpp 声音管理
 刘家豪：
 src\scene\screencenter.cpp 屏幕中间的小十字架 
 src\scene\inventory.cpp    简单的装备栏
-src\character.cpp          包括LSystem，玩家的控制，碰撞检测，放置/删除方块
+src\character.cpp          包括LSystem生成河流，玩家的控制，碰撞检测，放置/删除方块
 
 胡雨昕：
 scene\block.cpp         单个方块的抽象类
