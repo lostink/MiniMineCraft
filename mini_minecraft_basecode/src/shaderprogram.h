@@ -19,6 +19,7 @@ public:
     //Yuxin MM02
     GLuint textureHandler; //A handle for the texture map loaded for lambert shader
     GLuint normalmapHandler; //A handle for the nornal map loaded for lambert shader
+    GLuint invMapHandler;
 
     int attrPos; // A handle for the "in" vec4 representing vertex position in the vertex shader
     int attrNor; // A handle for the "in" vec4 representing vertex normal in the vertex shader
@@ -29,6 +30,7 @@ public:
     int unifViewProj; // A handle for the "uniform" mat4 representing combined projection and view matrices in the vertex shader
     int unifColor; // A handle for the "uniform" vec4 representing color of geometry in the vertex shader
 
+
     //Yuxin MM02
     int unifSampler; //A handle for the "uniform" textureSampler representing the texture map in fragment shader
     int attrUv; //A handle for the "in" vec2 representing uv coordinates in the vertex shader
@@ -38,6 +40,9 @@ public:
     int attrShiness; //A handle for the "in" float representing the block shiness
     int unifEye; //A handle for the "uniform" vec4 representing the eye position in the world
 
+
+    //Jiahao MM03
+    int unifInv;
 
 public:
     ShaderProgram(GLWidget277* context);
@@ -70,6 +75,10 @@ public:
     void setTimeCount(int timeCount);
     void setEyePosition(glm::vec3 eyePos);
 
+
+    //Jiahao MM03
+    void bindTexture31();
+    void setUpInventory();
 private:
     GLWidget277* context;   // Since Qt's OpenGL support is done through classes like QOpenGLFunctions_3_2_Core,
                             // we need to pass our OpenGL context to the Drawable in order to call GL functions

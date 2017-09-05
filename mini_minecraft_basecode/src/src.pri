@@ -20,7 +20,8 @@ SOURCES += \
     $$PWD/scene/block.cpp \
     $$PWD/scene/chunkmanager.cpp \
     $$PWD/proceduralterrain.cpp \
-    $$PWD/character.cpp
+    $$PWD/character.cpp \
+    $$PWD/scene/inventory.cpp
 
 HEADERS += \
     $$PWD/la.h \
@@ -40,4 +41,5 @@ HEADERS += \
     $$PWD/scene/block.h \
     $$PWD/scene/chunkmanager.h \
     $$PWD/proceduralterrain.h \
-    $$PWD/character.h
+    $$PWD/character.h \
+    $$PWD/scene/inventory.h

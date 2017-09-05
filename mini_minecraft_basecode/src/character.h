@@ -5,6 +5,7 @@
 #include <tuple>
 #include <proceduralterrain.h>
 #include <scene/chunkmanager.h>
+#include <scene/screencenter.h>
 #include <proceduralterrain.h>
 #include <algorithm>
 using std::max;
@@ -18,8 +19,10 @@ public:
     map<tuple<int,int,int>,blocktype> *mesh;
     ChunkManager                      *Manager;
     ProceduralTerrain                 *terrain;
+    screenCenter                      *screenLayer;
     float velocity_down;//using to calculate velocity
     blocktype holding_type;//TODO:use enum to replace this.
+    int holding_type_int;
     float upAngle;//Used to make constraint
     bool DisableFlyingAndCollision;
     vector<tuple<int,int,int>> NewBlockVec;
@@ -57,5 +60,9 @@ public:
     void ParsingMain(glm::vec3 location,glm::vec3 direction,const vector<char>& sentence,int start,int end,int width);
     void ParsingBranch(glm::vec3 location,glm::vec3 direction,const vector<char>& sentence,int start,int end,int width);
     void DigToSky(int x,int y,int z);
+    //Holding part
+    void holding_type_change(int delta);
+    void setCenter(screenCenter* input);
+//    void setCenter(screenCenter* input);
 };
 #endif // CHARACTER_H

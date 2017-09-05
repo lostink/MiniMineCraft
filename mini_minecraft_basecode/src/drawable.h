@@ -17,12 +17,17 @@ protected:
     //===========Added by Yuxin===========//
     GLuint bufChunk; //A vertex Buffer Object that we will use to store the chunk verts position, normal, and color interleaved
 
+    //===========Lost==
+    GLuint bufUV;
+    //===========End
+
     bool idxBound; // Set to TRUE by generateIdx(), returned by bindIdx().
     bool posBound;
     bool norBound;
     bool colBound;
     //===========Added by Yuxin===========//
     bool chunkBound;
+    bool uvBound;
 
     GLWidget277* context; // Since Qt's OpenGL support is done through classes like QOpenGLFunctions_3_2_Core,
                           // we need to pass our OpenGL context to the Drawable in order to call GL functions
@@ -47,12 +52,13 @@ public:
     void generateCol();
     //===========Added by Yuxin===========//
     void generateChunk();
-
+    void generateUV();
 
     bool bindIdx();
     bool bindPos();
     bool bindNor();
     bool bindCol();
+    bool bindUV();
     //===========Added by Yuxin===========//
     bool bindChunk();
 };

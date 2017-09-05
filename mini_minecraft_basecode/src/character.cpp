@@ -7,8 +7,11 @@ character::character():WorldCamera(nullptr),mesh(nullptr),velocity_down(0),Manag
     velocity_down = 0;
     SentenceGenerate();
     printf("Generating Rivers...");
-    ParsingMain(glm::vec3(32,4,32),glm::vec3(1,0,0),river_sentence_main,0,river_sentence_main.size(),4);
-    ParsingBranch(glm::vec3(16,4,32),glm::vec3(-1,0,0),river_sentence_branch,0,river_sentence_branch.size(),4);
+    ParsingMain(glm::vec3(32,4,32),glm::vec3(cos(0.1),0,sin(0.1)),river_sentence_main,0,river_sentence_main.size(),4);
+    ParsingBranch(glm::vec3(0,4,32),glm::vec3(-cos(0.1),0,sin(0.1)),river_sentence_branch,0,river_sentence_branch.size(),4);
+    holding_type_int = 0;
+    holding_type = DIRT;
+    printf("River Generate Ends.");
 }
 void character::SetMainCamera(Camera *input)
 {
@@ -41,6 +44,10 @@ void character::SetManager(ChunkManager *input)
 void character::SetTerrain(ProceduralTerrain *input)
 {
     terrain = input;
+}
+void character::setCenter(screenCenter *input)
+{
+    screenLayer = input;
 }
 void character::RenewPlace(Camera *MainCamera){
     //Copy for this time.
@@ -407,8 +414,8 @@ void character::RefreshBound()
         {
             terrain->addNewChunk(block_x * 16,block_z * 16);
             //Here insert my river block
-            for (int fx = 0;fx<16;++fx)
-                for (int fz = 0;fz<16;++fz)
+            for (int fx = -3;fx<16+3;++fx)
+                for (int fz = -3;fz<16+3;++fz)
                 {
                     tuple<int,int,int> River_block(block_x * 16+fx,RIVER_HEIGHT,block_z*16+fz);
                     map<tuple<int,int,int>,blocktype>::iterator it_river = River_main.find(River_block);
@@ -430,6 +437,7 @@ void character::RefreshBound()
 void character::ChangeFlyingAndCollision()
 {
     DisableFlyingAndCollision ^= 1;
+
 }
 vector<tuple<int,int,int>>* character::GetNewBlockVec()
 {
@@ -462,6 +470,15 @@ void character::ParsingMain(glm::vec3 location, glm::vec3 direction,const vector
 {
     if (start >= end) return;
     if (width <= 0) return;
+    //Randomize moving
+
+    ProceduralTerrain temp;
+    float Random_angle = (temp.PerlinNoise_2D(location[0]*4,location[2]*4) / 32.0 - 0.5) * 3.141592653589793;
+    glm::vec3 direction_o(direction);
+    direction[0] = direction_o[0] * cos(Random_angle) +direction_o[2] * sin(Random_angle);
+    direction[1] = 0;
+    direction[2] = direction_o[0] * sin(Random_angle) -direction_o[2] * cos(Random_angle);
+
     if (sentence[start] == 'A')
     {
         int x = int(location[0]>0?location[0]:location[0]-1);
@@ -481,24 +498,46 @@ void character::ParsingMain(glm::vec3 location, glm::vec3 direction,const vector
     }
     else if (sentence[start] == 'B')
     {
-        ParsingMain(location,direction,sentence,start+1,end,width);
-        if (rand() % 20 == 4)
+        ParsingMain(location + direction,direction,sentence,start+1,end,width);
+
+        if (rand() % 20 == 2)
         {
             glm::vec3 direction_ori(direction);
             float flag = (rand() % 2 == 1)?1:-1;
-            float angle = flag * 3.141592653589793 / 4;
+            float angle = flag * 3.141592653589793 / 4.0;
             direction[0] = direction_ori[0] * cos(angle) +direction_ori[2] * sin(angle);
             direction[1] = 0;
             direction[2] = direction_ori[0] * sin(angle) -direction_ori[2] * cos(angle);
-            ParsingMain(location,direction,sentence,start+1,end,width-2);
+            width--;
+            for (int times = 0;times < 15;++times)
+            {
+                int x = int(location[0]>0?location[0]:location[0]-1);
+                int y = int(location[1]>0?location[1]:location[1]-1);
+                int z = int(location[2]>0?location[2]:location[2]-1);
+                for (int dx = -1 * width;dx <= width-1;++dx)
+                    for (int dz = -1 * width;dz <= width-1;++dz)
+                    {
+                        if (abs(dx) + abs(dz)<= width)
+                        {
+        //                    printf("%d %d %d\n",x+dx,y,z+dz);
+                            tuple<int ,int , int> current(x + dx,RIVER_HEIGHT,z + dz);
+                            River_branch[current] = WATER;
+                        }
+                    }
+                location = location + direction;
+            }
+            ParsingMain(location + direction,direction,sentence,start+1,end,width-1);
         }
     }
 }
 void character::ParsingBranch(glm::vec3 location, glm::vec3 direction,const vector<char>&sentence, int start, int end, int width)
 {
+    if (width==0)
+        width+=rand() % 5 <=3?1:0;
     if (start >= end) return;
     if (width <= 0) return;
 //    printf("%c\n",sentence[start]);
+
     if (sentence[start] == 'A')
     {
         for (int times = 0;times < 10;++times)
@@ -523,14 +562,18 @@ void character::ParsingBranch(glm::vec3 location, glm::vec3 direction,const vect
     else if (sentence[start] == 'B')
     {
         glm::vec3 direction_ori(direction);
-        float angle = 3.3141592653589793 / 4;
-        direction[0] = direction_ori[0] * cos(angle) +direction_ori[2] * sin(angle);
+
+        ProceduralTerrain temp;
+        float Random_angle = (temp.PerlinNoise_2D(location[0]*4,location[2]*4) / 32.0 - 0.5) * 3.141592653589793;
+
+        float angle = 3.141592653589793 / 6;
+        direction[0] = direction_ori[0] * cos(angle+Random_angle) +direction_ori[2] * sin(angle+Random_angle);
         direction[1] = 0;
-        direction[2] = direction_ori[0] * sin(angle) -direction_ori[2] * cos(angle);
+        direction[2] = direction_ori[0] * sin(angle+Random_angle) -direction_ori[2] * cos(angle+Random_angle);
         ParsingBranch(location,direction,sentence,start+1,end,width-1);
-        direction[0] = direction_ori[0] * cos(-angle) +direction_ori[2] * sin(-angle);
+        direction[0] = direction_ori[0] * cos(-angle-Random_angle) +direction_ori[2] * sin(-angle-Random_angle);
         direction[1] = 0;
-        direction[2] = direction_ori[0] * sin(-angle) -direction_ori[2] * cos(-angle);
+        direction[2] = direction_ori[0] * sin(-angle-Random_angle) -direction_ori[2] * cos(-angle-Random_angle);
         ParsingBranch(location,direction,sentence,start+1,end,width-1);
     }
 }
@@ -541,10 +584,10 @@ void character::SentenceGenerate()
     //River 1:
     //Main River with few branches
     river_sentence_main.push_back('A');
-    river_sentence_main.push_back('A');
-    river_sentence_main.push_back('A');
-    river_sentence_main.push_back('A');
     river_sentence_main.push_back('B');
+    river_sentence_main.push_back('A');
+    river_sentence_main.push_back('A');
+    river_sentence_main.push_back('A');
     river_sentence_main.push_back('A');
     river_sentence_main.push_back('A');
     while (river_sentence_main.size() < 200)
@@ -557,14 +600,15 @@ void character::SentenceGenerate()
             {
                 temp.push_back('A');
                 temp.push_back('A');
-                temp.push_back('A');
-                temp.push_back('A');
                 temp.push_back('B');
+                temp.push_back('A');
+                temp.push_back('A');
                 temp.push_back('A');
                 temp.push_back('A');
             }
             else
                 temp.push_back(river_sentence_main[i]);
+            if (temp.size() > 200) break;
         }
         river_sentence_main.clear();
         for (int i=0;i<temp.size();++i)
@@ -572,10 +616,12 @@ void character::SentenceGenerate()
     }
     //River 2:
     //Branching river:
-    for (int i=0;i<2;++i)
+    for (int i=0;i<1;++i)
         river_sentence_branch.push_back('A');
     river_sentence_branch.push_back('B');
-    while (river_sentence_branch.size() <15)
+    for (int i=0;i<3;++i)
+        river_sentence_branch.push_back('A');
+    while (river_sentence_branch.size() <20)
     {
         vector<char> temp;
         temp.clear();
@@ -583,13 +629,15 @@ void character::SentenceGenerate()
         {
             if (river_sentence_branch[i] == 'A')
             {
-                for (int i=0;i<2;++i)
-                    temp.push_back('A');
+                temp.push_back('A');
                 temp.push_back('B');
+                temp.push_back('A');
+                temp.push_back('A');
+                temp.push_back('A');
             }
             else
                 temp.push_back(river_sentence_branch[i]);
-            if (temp.size() > 15)
+            if (temp.size() > 20)
                 break;
         }
         river_sentence_branch.clear();
@@ -597,4 +645,46 @@ void character::SentenceGenerate()
             river_sentence_branch.push_back(temp[i]);
     }
 
+}
+void character::holding_type_change(int delta)
+{
+    //set holding type
+    holding_type_int = (10 + holding_type_int + delta) % 10;
+
+    switch (holding_type_int) {
+    case 0:
+        holding_type = DIRT;
+        break;
+    case 1:
+        holding_type = GRASS;
+        break;
+    case 2:
+        holding_type = LAVA;
+        break;
+    case 3:
+        holding_type = STONE;
+        break;
+    case 4:
+        holding_type = WOOD;
+        break;
+    case 5:
+        holding_type = LEAF;
+        break;
+    case 6:
+        holding_type = BEDROCK;
+        break;
+    case 7:
+        holding_type = COAL;
+        break;
+    case 8:
+        holding_type = IRONORE;
+        break;
+    case 9:
+        holding_type = WATER;
+        break;
+    default:
+        break;
+    }
+    screenLayer->setHoldingtype(holding_type_int);
+    screenLayer->create();
 }

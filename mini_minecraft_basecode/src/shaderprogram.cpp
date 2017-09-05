@@ -7,8 +7,8 @@
 
 
 ShaderProgram::ShaderProgram(GLWidget277 *context)
-    : vertShader(), fragShader(), prog(),textureHandler(),
-      attrPos(-1), attrNor(-1), attrCol(-1),
+    : vertShader(), fragShader(), prog(),textureHandler(),invMapHandler(),
+      attrPos(-1), attrNor(-1), attrCol(-1),unifInv(-1),
       unifModel(-1), unifModelInvTr(-1), unifViewProj(-1), unifColor(-1),unifSampler(-1),attrUv(-1),unifNormal(-1),
       unifTime(-1),attrBlockType(-1),attrShiness(-1),context(context)
 {}
@@ -80,6 +80,9 @@ void ShaderProgram::create(const char *vertfile, const char *fragfile)
     unifNormal = context->glGetUniformLocation(prog, "normalSampler");
     unifTime = context->glGetUniformLocation(prog, "u_Time");
     unifEye = context->glGetUniformLocation(prog, "eyePos");
+
+    //Jiahao MM03
+    unifInv = context->glGetUniformLocation(prog, "InvSampler");
 }
 
 void ShaderProgram::useMe()
@@ -191,6 +194,10 @@ void ShaderProgram::draw(Drawable &d)
         context->glVertexAttribPointer(attrCol, 4, GL_FLOAT, false, 0, NULL);
     }
 
+    if (attrUv != -1 && d.bindUV()) {
+        context->glEnableVertexAttribArray(attrUv);
+        context->glVertexAttribPointer(attrUv, 2, GL_FLOAT, false, 0, NULL);
+    }
     //===================Added by Yuxin======================//
     if(attrPos != -1 && d.bindChunk()){
         context->glEnableVertexAttribArray(attrPos);
@@ -383,4 +390,38 @@ void ShaderProgram::setUpNormalMap(){
     if(unifNormal!=-1){
         context->glUniform1i(unifNormal, 1);
     }
+}
+//Jiahao MM03
+void ShaderProgram::bindTexture31()
+{
+    context->glActiveTexture(GL_TEXTURE31);
+    context->glBindTexture(GL_TEXTURE_2D,invMapHandler);
+}
+void ShaderProgram::setUpInventory(){
+    useMe();
+
+    context->glGenTextures(1, &invMapHandler);
+    context->glActiveTexture(GL_TEXTURE31);
+    context->glBindTexture(GL_TEXTURE_2D,invMapHandler);
+
+    //Read in texture image
+    int width, height;
+    QDir currentDir = QDir::current();
+    currentDir.cdUp();
+    currentDir.cd("mini_minecraft_basecode/texturemap");
+    QString textureFile = currentDir.path()+"/inventory.png";
+    QByteArray inBytes;
+    inBytes = textureFile.toUtf8();
+    const char* fileName = inBytes.constData();
+    unsigned char* image = SOIL_load_image(fileName,&width, &height, 0, SOIL_LOAD_RGB);
+    printf("SOIL inv loading results: '%s'\n", SOIL_last_result());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE,image);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    if(unifInv!=-1){
+        context->glUniform1i(unifInv, 31);
+    }
+
 }

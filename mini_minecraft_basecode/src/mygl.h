@@ -9,6 +9,7 @@
 #include <scene/scene.h>
 #include <scene/chunk.h>
 #include <scene/chunkmanager.h>
+#include <scene/inventory.h>
 #include <proceduralterrain.h>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLShaderProgram>
@@ -27,6 +28,7 @@ class MyGL
 private:
     Cube geom_cube;// The instance of a unit cube we can use to render any cube. Should NOT be used in final version of your project.
     screenCenter geom_Center;
+    Inventory geom_Inventory;
     ChunkManager chunkManager;
     ShaderProgram prog_lambert;// A shader program that uses lambertian reflection
     ShaderProgram prog_flat;// A shader program that uses "flat" reflection (no shadowing at all)
@@ -81,6 +83,7 @@ protected:
     void keyReleaseEvent(QKeyEvent *e);
     void mousePressEvent(QMouseEvent *e);
     void mouseMoveEvent(QMouseEvent *e);
+    void wheelEvent(QWheelEvent *e);
     void Moving();
     //Insert End.
 private slots:

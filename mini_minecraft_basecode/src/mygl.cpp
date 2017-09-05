@@ -9,7 +9,7 @@
 MyGL::MyGL(QWidget *parent)
     : GLWidget277(parent),
       geom_cube(this),geom_Center(this),chunkManager(),
-      prog_lambert(this), prog_flat(this),
+      prog_lambert(this), prog_flat(this),geom_Inventory(this),
       gl_camera(),timeCount(0)
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
@@ -19,6 +19,7 @@ MyGL::MyGL(QWidget *parent)
     setFocusPolicy(Qt::ClickFocus);
     //Lostink Test code
     geom_Center.setCenter(QPoint(width() / 2, height() / 2));
+    geom_Inventory.setCenter(QPoint(width() / 2, height() / 2));
     ShowMouse = true;
     setMouseTracking(true);
     QCursor c = cursor();
@@ -35,6 +36,7 @@ MyGL::MyGL(QWidget *parent)
     Tester.SetMesh(&terrain.mapWorld);
     Tester.SetManager(&chunkManager);
     Tester.SetTerrain(&terrain);
+    Tester.setCenter(&geom_Center);
 
     std::tuple<int, int, int> startPos(0,0,0);
     for(int x=0; x<4; x++){
@@ -81,10 +83,12 @@ void MyGL::initializeGL()
     //Create the instance of Cube
     geom_cube.create();
     geom_Center.create();
+    geom_Inventory.create();
     // Create and set up the diffuse shader
     prog_lambert.create(":/glsl/lambert.vert.glsl", ":/glsl/lambert.frag.glsl");
     // Create and set up the flat lighting shader
     prog_flat.create(":/glsl/flat.vert.glsl", ":/glsl/flat.frag.glsl");
+    prog_flat.setUpInventory();
 
     // Set a color with which to draw geometry since you won't have one
     // defined until you implement the Node classes.
@@ -180,7 +184,11 @@ void MyGL::paintGL()
     GLRenderWorld();
     prog_flat.setModelMatrix(glm::mat4(1.0));
     prog_flat.setViewProjMatrix(glm::mat4(1.0));
+    prog_flat.bindTexture31();
+    glDisable(GL_DEPTH_TEST);
+    prog_flat.draw(geom_Inventory);
     prog_flat.draw(geom_Center);
+    glEnable(GL_DEPTH_TEST);
 }
 
 //=====================Added by Yuxin==============================//
@@ -236,6 +244,7 @@ void MyGL::keyPressEvent(QKeyEvent *e)
     float amount = 0.3f;
     if(e->modifiers() & Qt::ShiftModifier){
         amount = 10.0f;
+        flag_amount_speed = 25.0 / 60.0;
     }
     // http://doc.qt.io/qt-5/qt.html#Key-enum
     // This could all be much more efficient if a switch
@@ -307,7 +316,10 @@ void MyGL::keyPressEvent(QKeyEvent *e)
 //Lostink insert code
 void MyGL::keyReleaseEvent(QKeyEvent *e)
 {
-    if (e->key() == Qt::Key_W){
+    if(e->key() == Qt::Key_Shift)
+    {
+        flag_amount_speed = 5.0 / 60.0;
+    }else if (e->key() == Qt::Key_W){
         flag_moving_forward = 0;
     }else if (e->key() == Qt::Key_S) {
         flag_moving_backward = 0;
@@ -335,6 +347,17 @@ void MyGL::mousePressEvent(QMouseEvent *e)
     {Tester.AddBlockToLookAt();}
     else if (e->button() == Qt::LeftButton)
     {Tester.DeleteBlockLookAt();}
+}
+void MyGL::wheelEvent(QWheelEvent *e)
+{
+    if (e->delta() >0){
+        //printf("Fuck!\n");
+        Tester.holding_type_change(-1);
+    }
+    else{
+        //printf("EEE\n");
+        Tester.holding_type_change(1);
+    }
 }
 void MyGL::mouseMoveEvent(QMouseEvent *e)
 {

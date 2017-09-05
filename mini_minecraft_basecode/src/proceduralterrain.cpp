@@ -59,7 +59,7 @@ float ProceduralTerrain::SmoothNoise_3D_xz(int x, int y, int z)
                   +Noise_3D_xz(x-1,y-1,z+1) + Noise_3D_xz(x-1,y-1,z-1)) / 96;
     return center + side + side_corner + corner;
 }
-//another 3D smooth function
+//another 3D smooth function0
 float ProceduralTerrain::SmoothNoise_3D_y(int x, int y, int z)
 {
     float center = Noise_3D_y(x,y,z) / 4;
